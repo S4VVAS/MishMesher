@@ -9,6 +9,6 @@ struct material_group{
 
 //Main model
 struct model{
-    int* sizes;
+    int** sizes;
     struct material_group *groups;
 };
