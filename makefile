@@ -1,5 +1,7 @@
+LINKED= obj_importer.c
 
 mesh: clean
+	gcc $(LINKED) main.c -o mishmesh
 
 clean:
 	rm -f ./mishmesh *.o
