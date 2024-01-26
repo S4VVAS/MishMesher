@@ -1,20 +1,14 @@
 #pragma once
 
-struct point{
-    double* coordinates;
-};
-
-struct face{
-    unsigned int* face_points;
-};
-
 struct material_group{
-    unsigned int material_label;
-    struct point *points;
-    struct face *faces;
+    char material_label;
+
+    double **points; //array of arrays[3]
+    unsigned int **faces; //array of arrays[3]
 };
 
 //Main model
 struct model{
+    int* sizes;
     struct material_group *groups;
 };
