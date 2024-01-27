@@ -39,8 +39,9 @@ void parse_face(const char* line, struct model* mesh, int* n){
 
 void parse_vector(const char* line, struct model* mesh, int* n){
     
-    char editable_line = *line;
-    char* tokens = strtok(&(editable_line), " ");
+    char editable_line[STRMAX];
+    strcpy(editable_line, line);
+    char* tokens = strtok(editable_line, " ");
     double coordinates[3];
     char* pEnd;
     
@@ -48,11 +49,9 @@ void parse_vector(const char* line, struct model* mesh, int* n){
     coordinates[1] = strtod(pEnd, &pEnd);
     coordinates[2] = strtod(pEnd, NULL);
 
-  
-    
-    mesh->groups[n[2]].points[n[1]][0];
-    //mesh->groups[n[2]].points[n[1]][1];
-    //mesh->groups[n[2]].points[n[1]][2];
+    mesh->groups[n[2]].points[n[1]][0] = coordinates[0];
+    mesh->groups[n[2]].points[n[1]][1] = coordinates[1];
+    mesh->groups[n[2]].points[n[1]][2] = coordinates[2];
 }
 
 void parse_layer(const char* line, struct model* mesh, int* n){
@@ -63,16 +62,18 @@ struct model* alloc_model(int** sizes){
     struct model *mesh = (struct model*)malloc(sizeof(struct model));
     mesh->groups = (struct material_group*)malloc(imported_number_of_layers * sizeof(struct material_group));
     
-    
     for(int i = 0; i < imported_number_of_layers; i++){
-        
         mesh->groups[i].points = (double**)malloc(sizes[i][1] * sizeof(double*));
-        for(int j = 0; j < sizes[i][1]; j++)
-            mesh->groups[i].points[j] = (double*)malloc(3 * sizeof(double));
 
+        printf("SIZE L%d, V%d, F%d\n",i,sizes[i][1],sizes[i][0]);
+
+        for(int j = 0; j < sizes[i][1]; j++){
+            mesh->groups[i].points[j] = (double*)calloc(4, sizeof(double));
+        }
         mesh->groups[i].faces = (unsigned int**)malloc(sizes[i][0] * sizeof(unsigned int*));
-        for(int j = 0; j < sizes[i][0]; j++)
-            mesh->groups[i].faces[j] = (unsigned int*)malloc(3 * sizeof(unsigned int));
+        for(int j = 0; j < sizes[i][0]; j++){
+            mesh->groups[i].faces[j] = (unsigned int*)calloc(4, sizeof(unsigned int));
+        }
     }
 
     return mesh;
@@ -106,12 +107,9 @@ int** npoints_nfaces(FILE* file){
     
 
     int** nums = malloc(sizeof(int*) * imported_number_of_layers);
-    for(int i = 0; i < imported_number_of_layers; i++){
-        nums[i] = (int*) malloc(sizeof(int) * 2);
-        //DOES NOT INCREMENT BELLOWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-    }
+    for(int i = 0; i < imported_number_of_layers; i++)
+        nums[i] = (int*) calloc(2,sizeof(int));
 
-    
     while(fgets(buffer, STRMAX, file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *line_content = buffer + n;
@@ -123,9 +121,11 @@ int** npoints_nfaces(FILE* file){
             else if (!strcmp(key, "g")){
                 curr_layer++;
             }
-                
         }
-    }
+
+    }                
+    
+    //printf("layer %d -> %d %d\n", curr_layer, nums[curr_layer][0], nums[curr_layer][1]);
 
     rewind(file);
     return nums;
@@ -154,9 +154,9 @@ struct model* parse_mesh(FILE* file){
     struct model *mesh = alloc_model(nums);
     mesh->sizes = nums;
 
-    int* curr_iter = calloc(0, sizeof(int)*3);
+    int* curr_iter = calloc(3, sizeof(int));
 
-    
+    curr_iter[2] = -1;
 
     while(fgets(buffer, STRMAX, file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
@@ -171,15 +171,16 @@ struct model* parse_mesh(FILE* file){
                 curr_iter[1]++;
             }
             else if (!strcmp(key, "g")){  
-                parse_layer(lc, mesh, curr_iter);
                 curr_iter[0] = 0;
                 curr_iter[1] = 0;
                 curr_iter[2]++;
-                
+                parse_layer(lc, mesh, curr_iter);
             }
         }
     }
     
+    printf("finnished parsing!\n");
+
     //TEMP
     destroy_model(mesh);
 
