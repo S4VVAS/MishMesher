@@ -34,7 +34,22 @@ struct model* import_mesh(char* path){
 }
 
 void parse_face(const char* line, struct model* mesh, int* n){
+    char editable_line[STRMAX];
+    strcpy(editable_line, line);
 
+    char* x_tok, *y_tok, *z_tok;
+    x_tok = strtok(editable_line, " ");
+    y_tok = strtok(NULL, " ");
+    z_tok = strtok(NULL, " ");
+    
+    char* x, *y, *z;
+    x = strtok(x_tok, "/");
+    y = strtok(y_tok, "/");
+    z = strtok(z_tok, "/");
+
+    mesh->groups[n[2]].faces[n[0]][0] = atoi(x);
+    mesh->groups[n[2]].faces[n[0]][1] = atoi(y);
+    mesh->groups[n[2]].faces[n[0]][2] = atoi(z);
 }
 
 void parse_vector(const char* line, struct model* mesh, int* n){
@@ -68,11 +83,11 @@ struct model* alloc_model(int** sizes){
         printf("SIZE L%d, V%d, F%d\n",i,sizes[i][1],sizes[i][0]);
 
         for(int j = 0; j < sizes[i][1]; j++){
-            mesh->groups[i].points[j] = (double*)calloc(4, sizeof(double));
+            mesh->groups[i].points[j] = (double*)calloc(3, sizeof(double));
         }
         mesh->groups[i].faces = (unsigned int**)malloc(sizes[i][0] * sizeof(unsigned int*));
         for(int j = 0; j < sizes[i][0]; j++){
-            mesh->groups[i].faces[j] = (unsigned int*)calloc(4, sizeof(unsigned int));
+            mesh->groups[i].faces[j] = (unsigned int*)calloc(3, sizeof(unsigned int));
         }
     }
 
@@ -156,6 +171,7 @@ struct model* parse_mesh(FILE* file){
 
     int* curr_iter = calloc(3, sizeof(int));
 
+    //Start at layer -1 as it gets incremented straight away to 0
     curr_iter[2] = -1;
 
     while(fgets(buffer, STRMAX, file)){
