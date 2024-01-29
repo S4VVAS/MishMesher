@@ -5,8 +5,6 @@
 // f    =   Polygonal face element.
 // #    =   Comment.
 
-//What i need to parse: g v f
-
 #include "obj_importer.h"
 #define STRMAX 1024
 
@@ -41,7 +39,7 @@ void parse_face(const char* line, struct model* mesh, int* n){
     x_tok = strtok(editable_line, " ");
     y_tok = strtok(NULL, " ");
     z_tok = strtok(NULL, " ");
-    
+
     char* x, *y, *z;
     x = strtok(x_tok, "/");
     y = strtok(y_tok, "/");
@@ -53,7 +51,6 @@ void parse_face(const char* line, struct model* mesh, int* n){
 }
 
 void parse_vector(const char* line, struct model* mesh, int* n){
-    
     char editable_line[STRMAX];
     strcpy(editable_line, line);
     char* tokens = strtok(editable_line, " ");
@@ -78,17 +75,15 @@ struct model* alloc_model(int** sizes){
     mesh->groups = (struct material_group*)malloc(imported_number_of_layers * sizeof(struct material_group));
     
     for(int i = 0; i < imported_number_of_layers; i++){
+        printf("Layer %d contains: %d vertices and %d faces\n",i,sizes[i][1],sizes[i][0]);
+
         mesh->groups[i].points = (double**)malloc(sizes[i][1] * sizeof(double*));
-
-        printf("SIZE L%d, V%d, F%d\n",i,sizes[i][1],sizes[i][0]);
-
-        for(int j = 0; j < sizes[i][1]; j++){
+        for(int j = 0; j < sizes[i][1]; j++)
             mesh->groups[i].points[j] = (double*)calloc(3, sizeof(double));
-        }
+
         mesh->groups[i].faces = (unsigned int**)malloc(sizes[i][0] * sizeof(unsigned int*));
-        for(int j = 0; j < sizes[i][0]; j++){
+        for(int j = 0; j < sizes[i][0]; j++)
             mesh->groups[i].faces[j] = (unsigned int*)calloc(3, sizeof(unsigned int));
-        }
     }
 
     return mesh;
@@ -111,7 +106,6 @@ int nlayers(FILE* file){
     return layers;
 }
 
-
 int** npoints_nfaces(FILE* file){
     char buffer[STRMAX];
     char key[STRMAX];
@@ -133,14 +127,10 @@ int** npoints_nfaces(FILE* file){
                 nums[curr_layer][0]++;
             else if (!strcmp(key, "v")) 
                 nums[curr_layer][1]++;
-            else if (!strcmp(key, "g")){
+            else if (!strcmp(key, "g"))
                 curr_layer++;
-            }
         }
-
     }                
-    
-    //printf("layer %d -> %d %d\n", curr_layer, nums[curr_layer][0], nums[curr_layer][1]);
 
     rewind(file);
     return nums;
@@ -155,8 +145,6 @@ void destroy_model(struct model* mesh) {
     free(mesh->groups);
     free(mesh);
 }
-
-
 
 struct model* parse_mesh(FILE* file){
     char buffer[STRMAX];
@@ -195,15 +183,12 @@ struct model* parse_mesh(FILE* file){
         }
     }
     
-    printf("finnished parsing!\n");
+    printf("finnished model parsing\n");
 
-    //TEMP
-    destroy_model(mesh);
+    destroy_model(mesh); //TEMP FOR TEST
 
     free(curr_iter);
     close_file(file);
     //return mesh;
-    return NULL;
+    return NULL; //TEMP FOR TEST
 }
-
-
