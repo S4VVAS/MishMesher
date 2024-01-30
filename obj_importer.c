@@ -114,7 +114,6 @@ int** npoints_nfaces(FILE* file){
 
     imported_number_of_layers = nlayers(file);
     
-
     int** nums = malloc(sizeof(int*) * imported_number_of_layers);
     for(int i = 0; i < imported_number_of_layers; i++)
         nums[i] = (int*) calloc(2,sizeof(int));

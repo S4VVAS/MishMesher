@@ -1,15 +1,17 @@
 #pragma once
 
 struct material_group{
+    //material index
     int material_label;
-
-    
-    double **points; //array of arrays[3]
-    unsigned int **faces; //array of arrays[3]
+    //vertex representations = [v1[x, y, z],v2[x, y, z],...]
+    double **points;
+    //face representations = [f1[x_offset, y_offset, z_offset],...]
+    unsigned int **faces; 
 };
 
 //Main model
 struct model{
+    //layer sizes = [L1[n_points, n_faces], L2[n_points, n_faces],...]
     int** sizes;
     struct material_group *groups;
 };
