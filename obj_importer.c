@@ -66,17 +66,17 @@ void parse_vector(const char* line, struct model* mesh, int* n){
     mesh->groups[n[2]].points[n[1]][2] = coordinates[2];
 }
 
-void parse_layer(const char* line, struct model* mesh, int* n){
-    mesh->groups[n[2]].material_label = *line;
+void parse_layer(struct model* mesh, int* n){
+    mesh->groups[n[2]].material_label = n[2];
 }
 
 struct model* alloc_model(int** sizes){
     struct model *mesh = (struct model*)malloc(sizeof(struct model));
     mesh->groups = (struct material_group*)malloc(imported_number_of_layers * sizeof(struct material_group));
+
     
     for(int i = 0; i < imported_number_of_layers; i++){
         printf("Layer %d contains: %d vertices and %d faces\n",i,sizes[i][1],sizes[i][0]);
-
         mesh->groups[i].points = (double**)malloc(sizes[i][1] * sizeof(double*));
         for(int j = 0; j < sizes[i][1]; j++)
             mesh->groups[i].points[j] = (double*)calloc(3, sizeof(double));
@@ -174,21 +174,17 @@ struct model* parse_mesh(FILE* file){
                 parse_vector(lc, mesh, curr_iter);
                 curr_iter[1]++;
             }
-            else if (!strcmp(key, "g")){  
+            else if (!strcmp(key, "g")){ 
                 curr_iter[0] = 0;
                 curr_iter[1] = 0;
                 curr_iter[2]++;
-                parse_layer(lc, mesh, curr_iter);
+                parse_layer(mesh, curr_iter);
             }
         }
     }
-    
     printf("finnished model parsing\n");
-
-    destroy_model(mesh); //TEMP FOR TEST
 
     free(curr_iter);
     close_file(file);
-    //return mesh;
-    return NULL; //TEMP FOR TEST
+    return mesh;
 }
