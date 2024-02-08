@@ -185,5 +185,6 @@ struct model* parse_mesh(FILE* file){
 
     free(curr_iter);
     close_file(file);
+    mesh->n_layers = imported_number_of_layers;
     return mesh;
 }
