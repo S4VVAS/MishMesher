@@ -1,4 +1,4 @@
-LINKED= obj_importer.c
+LINKED= obj_importer.c mesher.c
 
 mesh: clean
 	gcc $(LINKED) main.c -o mishmesh
@@ -6,6 +6,6 @@ mesh: clean
 clean:
 	rm -f ./mishmesh *.o
 
-#  model-path  long-resolution  edge-buffer-size  opt:output-file-name  opt:core-count
+#  model-path  long-resolution  edge-buffer-size chunk-size opt:output-file-name  opt:core-count
 test: mesh
-	./mishmesh "models/g7.obj" 100 10
+	./mishmesh "models/g7.obj" 1000 0 10

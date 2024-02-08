@@ -9,6 +9,7 @@
 #define STRMAX 1024
 
 int imported_number_of_layers = 0;
+double x_max = 0, y_max = 0, z_max = 0;
 
 void close_file(FILE* file){
     if (fclose(file))
@@ -50,16 +51,25 @@ void parse_face(const char* line, struct model* mesh, int* n){
     mesh->groups[n[2]].faces[n[0]][2] = atoi(z);
 }
 
+
+
 void parse_vector(const char* line, struct model* mesh, int* n){
     char editable_line[STRMAX];
     strcpy(editable_line, line);
     char* tokens = strtok(editable_line, " ");
     double coordinates[3];
-    char* pEnd;
     
-    coordinates[0] = strtod(tokens, &pEnd);
-    coordinates[1] = strtod(pEnd, &pEnd);
-    coordinates[2] = strtod(pEnd, NULL);
+    for (int i = 0; i < 3; i++) {
+        coordinates[i] = strtod(tokens, NULL);
+        tokens = strtok(NULL, " ");
+    }
+
+    if (coordinates[0] > x_max)
+        x_max = coordinates[0];
+    if (coordinates[1] > y_max)
+        y_max = coordinates[1];
+    if (coordinates[2] > z_max)
+        z_max = coordinates[2];
 
     mesh->groups[n[2]].points[n[1]][0] = coordinates[0];
     mesh->groups[n[2]].points[n[1]][1] = coordinates[1];
@@ -181,6 +191,10 @@ struct model* parse_mesh(FILE* file){
             }
         }
     }
+    mesh->x_max = x_max;
+    mesh->y_max = y_max;
+    mesh->z_max = z_max;
+
     printf("finnished model parsing\n");
 
     free(curr_iter);
