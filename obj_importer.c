@@ -36,22 +36,29 @@ void parse_face(const char* line, struct model* mesh, int* n){
     char editable_line[STRMAX];
     strcpy(editable_line, line);
 
-    char* x_tok, *y_tok, *z_tok;
-    x_tok = strtok(editable_line, " ");
-    y_tok = strtok(NULL, " ");
-    z_tok = strtok(NULL, " ");
+    char* v1_tok, *v2_tok, *v3_tok, *v4_tok;
+    v1_tok = strtok(editable_line, " ");
+    v2_tok = strtok(NULL, " ");
+    v3_tok = strtok(NULL, " ");
+    v4_tok = strtok(NULL, " ");
 
-    char* x, *y, *z;
-    x = strtok(x_tok, "/");
-    y = strtok(y_tok, "/");
-    z = strtok(z_tok, "/");
+    char* v1, *v2, *v3, *v4;
+    v1 = strtok(v1_tok, "/");
+    v2 = strtok(v2_tok, "/");
+    v3 = strtok(v3_tok, "/");
+    v4 = strtok(v4_tok, "/");
 
-    mesh->groups[n[2]].faces[n[0]][0] = atoi(x);
-    mesh->groups[n[2]].faces[n[0]][1] = atoi(y);
-    mesh->groups[n[2]].faces[n[0]][2] = atoi(z);
+    //-1 for array offset
+    mesh->groups[n[2]].faces[n[0]][0] = atoi(v1);
+    mesh->groups[n[2]].faces[n[0]][1] = atoi(v2);
+    mesh->groups[n[2]].faces[n[0]][2] = atoi(v3);
+    if(atoi(v3) == atoi(v4))
+        mesh->groups[n[2]].faces[n[0]][3] = 0;
+    else
+        mesh->groups[n[2]].faces[n[0]][3] = atoi(v4);
+
+    //printf("%d %d %d %d\n", mesh->groups[n[2]].faces[n[0]][0],mesh->groups[n[2]].faces[n[0]][1],mesh->groups[n[2]].faces[n[0]][2],mesh->groups[n[2]].faces[n[0]][3]);
 }
-
-
 
 void parse_vector(const char* line, struct model* mesh, int* n){
     char editable_line[STRMAX];
@@ -71,9 +78,11 @@ void parse_vector(const char* line, struct model* mesh, int* n){
     if (coordinates[2] > z_max)
         z_max = coordinates[2];
 
-    mesh->groups[n[2]].points[n[1]][0] = coordinates[0];
-    mesh->groups[n[2]].points[n[1]][1] = coordinates[1];
-    mesh->groups[n[2]].points[n[1]][2] = coordinates[2];
+    mesh->points[n[1]][0] = coordinates[0];
+    mesh->points[n[1]][1] = coordinates[1];
+    mesh->points[n[1]][2] = coordinates[2];
+
+    //printf("%f %f %f\n", coordinates[0],coordinates[1],coordinates[2]);
 }
 
 void parse_layer(struct model* mesh, int* n){
@@ -84,16 +93,16 @@ struct model* alloc_model(int** sizes){
     struct model *mesh = (struct model*)malloc(sizeof(struct model));
     mesh->groups = (struct material_group*)malloc(imported_number_of_layers * sizeof(struct material_group));
 
-    
+    mesh->points = (double**)malloc(sizes[0][1] * sizeof(double*));
+    for(int i = 0; i < sizes[0][1]; i++)
+        mesh->points[i] = (double*)calloc(3, sizeof(double));
+
     for(int i = 0; i < imported_number_of_layers; i++){
-        printf("Layer %d contains: %d vertices and %d faces\n",i,sizes[i][1],sizes[i][0]);
-        mesh->groups[i].points = (double**)malloc(sizes[i][1] * sizeof(double*));
-        for(int j = 0; j < sizes[i][1]; j++)
-            mesh->groups[i].points[j] = (double*)calloc(3, sizeof(double));
+        printf("Layer %d contains: %d faces\n",i,sizes[i][0]);
 
         mesh->groups[i].faces = (unsigned int**)malloc(sizes[i][0] * sizeof(unsigned int*));
         for(int j = 0; j < sizes[i][0]; j++)
-            mesh->groups[i].faces[j] = (unsigned int*)calloc(3, sizeof(unsigned int));
+            mesh->groups[i].faces[j] = (unsigned int*)calloc(4, sizeof(unsigned int));
     }
 
     return mesh;
@@ -135,7 +144,7 @@ int** npoints_nfaces(FILE* file){
             if (!strcmp(key, "f")) 
                 nums[curr_layer][0]++;
             else if (!strcmp(key, "v")) 
-                nums[curr_layer][1]++;
+                nums[0][1]++;
             else if (!strcmp(key, "g"))
                 curr_layer++;
         }
@@ -146,11 +155,16 @@ int** npoints_nfaces(FILE* file){
 }
 
 void destroy_model(struct model* mesh) {
-    for (int i = 0; i < imported_number_of_layers; i++) {
-        free(mesh->groups[i].points);
+    for (int i = 0; i < mesh->n_layers; i++) {
+        for(int f = 0; f < mesh->sizes[i][0]; f++)
+            free(mesh->groups[i].faces[f]);
         free(mesh->groups[i].faces);
     }
-    
+   
+    for(int i = 0; i < mesh->sizes[0][1]; i++)
+        mesh->points[i] = (double*)calloc(3, sizeof(double));
+
+    free(mesh->points);
     free(mesh->groups);
     free(mesh);
 }
@@ -185,12 +199,12 @@ struct model* parse_mesh(FILE* file){
             }
             else if (!strcmp(key, "g")){ 
                 curr_iter[0] = 0;
-                curr_iter[1] = 0;
                 curr_iter[2]++;
                 parse_layer(mesh, curr_iter);
             }
         }
     }
+
     mesh->x_max = x_max;
     mesh->y_max = y_max;
     mesh->z_max = z_max;

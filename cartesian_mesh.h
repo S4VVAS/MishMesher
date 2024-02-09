@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h> 
+
 struct c_mesh{
     unsigned int size;
 
@@ -33,10 +35,16 @@ struct cc_mesh{
 
 
 };
+*/
+
+struct oct_mesh_leafs{
+    //8 bit char, representing 8 leafs bools -> solid?
+    char is_voxels_solid;
+};
 
 struct oct_mesh{
-
-
-
+    bool isPreLeaf;
+    int level;
+    struct oct_mesh *children;
+    struct oct_mesh *oct_mesh_leafs;
 };
-*/
