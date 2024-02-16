@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h> 
-
+/*
 struct c_mesh{
     unsigned int size;
 
@@ -19,7 +19,7 @@ struct c_mesh{
     //blocks = [b1[x, y, z, mx, my, mz],b2[x, y, z, mx, my, mz],,...]
     unsigned int **blocks;
 };
-/*
+
 struct cc_mesh{
     //Top left corner coordinate of each c_box
     unsigned int *x_cor,*y_cor,*z_cor;
@@ -37,14 +37,17 @@ struct cc_mesh{
 };
 */
 
-struct oct_mesh_leafs{
-    //8 bit char, representing 8 leafs bools -> solid?
-    char is_voxels_solid;
-};
+struct octree{
+    //bool isLeaf;
 
-struct oct_mesh{
-    bool isPreLeaf;
-    int level;
-    struct oct_mesh *children;
-    struct oct_mesh *oct_mesh_leafs;
+    _Atomic uint8_t is_voxels_solid;
+    char level;
+
+    bool isMallocing;
+    bool hasChildren;
+
+    //Used to eaily calculate size of blocks
+    
+
+    struct octree *children;
 };

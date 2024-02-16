@@ -209,7 +209,7 @@ struct model* parse_mesh(FILE* file){
     mesh->y_max = y_max;
     mesh->z_max = z_max;
 
-    printf("finnished model parsing\n");
+    printf("finnished model parsing\n\n");
 
     free(curr_iter);
     close_file(file);
