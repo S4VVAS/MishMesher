@@ -35,18 +35,18 @@ bool atomic_set(struct octree *node, int solid_child){
     return 0;
 }
 
-void malloc_children(struct octree node){
-    if(__sync_bool_compare_and_swap(&node.isMallocing, false, true)){
+void malloc_children(struct octree *node){
+    if(__sync_bool_compare_and_swap(&node->isMallocing, false, true)){
         //We got the lock
        // printf("Thread #%d is mallocing children\n", 0);
-        node.children = (struct octree*)malloc(sizeof(struct octree) * 8);
+        node->children = (struct octree*)malloc(sizeof(struct octree) * 8);
         for(int i = 0; i < 8; i++)
-            node.children[i].level = node.level + 1;
-        node.hasChildren = true;
-        node.isMallocing = false;
+            node->children[i].level = node->level - 1;
+        node->hasChildren = true;
+        node->isMallocing = false;
         return;
     }
-    while(__sync_bool_compare_and_swap(&node.isMallocing, false, false)){
+    while(__sync_bool_compare_and_swap(&node->isMallocing, false, false)){
         //printf("Thread #%d is waiting for children malloc\n", 0);
         //Spinlock, wait untill children have been malloced by other thread
         //Prone to deadlocks
@@ -81,10 +81,11 @@ struct vector3 to_vector3(double* v){
 
 */
 
-void tree_intersections(struct aabb box, struct tri* triangle, struct octree* root, double box_size){
+void tree_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
      //If tree is lowest level, look at char children
      //else loop through child nodes
-
+    if(node->level <= 1)
+        return;
     //For every child in the current node check for intersections
     double b_div_2 = box_size * 0.5;
 
@@ -99,10 +100,11 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* ro
     aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z + b_div_2};
 
     for(int i = 0; i < 8; i++){
-
-        
-
-
+        if(intersects(&aabbs[i], triangle)){
+            if(!node->hasChildren)
+                malloc_children(node);
+            tree_intersections(aabbs[i], triangle, &node->children[i], b_div_2);
+        }
     }
     //1 so basically do an intersection test for each level of the octree in a loop
             //  1.1 Go to child voxel that is a hit
@@ -136,8 +138,8 @@ void mesh(int long_resolution, struct model* model){
     for(int i = 0; i < model->n_layers; i++){
         printf("%d..\t", i);
         //Malloc octree root children and set level
-        roots[i].level = 0;
-        malloc_children(roots[i]);
+        roots[i].level = max_tree_depth;
+        malloc_children(&roots[i]);
 
 
 
