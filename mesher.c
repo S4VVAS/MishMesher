@@ -82,10 +82,7 @@ struct vector3 to_vector3(double* v){
 */
 
 void tree_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
-     //If tree is lowest level, look at char children
-     //else loop through child nodes
-    if(node->level <= 1)
-        return;
+    
     //For every child in the current node check for intersections
     double b_div_2 = box_size * 0.5;
 
@@ -98,6 +95,22 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     aabbs[5] = (struct aabb){box.max_x, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x, box.min_y + b_div_2, box.min_z + b_div_2};
     aabbs[6] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z};
     aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z + b_div_2};
+
+
+    //If tree is lowest level, look at char leafs
+    //Level <= 1 as the last level is the leaf nodes
+    if(node->level <= 1){
+        uint8_t mask = 0; // 00000000
+        for(int i = 0; i < 8; i++){
+            uint8_t t_mask = 1; // 00000001
+            if(intersects(&aabbs[i], triangle)){
+                t_mask = t_mask << i;
+                mask = mask | t_mask;
+            }
+        }
+        node->is_voxels_solid = mask;
+        return;
+    }
 
     for(int i = 0; i < 8; i++){
         if(intersects(&aabbs[i], triangle)){
