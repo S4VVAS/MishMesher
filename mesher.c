@@ -96,17 +96,15 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     aabbs[6] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z};
     aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z + b_div_2};
 
-
     //If tree is lowest level, look at char leafs
     //Level <= 1 as the last level is the leaf nodes
     if(node->level <= 1){
         uint8_t mask = 0; // 00000000
         for(int i = 0; i < 8; i++){
             uint8_t t_mask = 1; // 00000001
-            if(intersects(&aabbs[i], triangle)){
-                t_mask = t_mask << i;
-                mask = mask | t_mask;
-            }
+            if(intersects(&aabbs[i], triangle))
+                //Shift by i to set correct child
+                mask = mask | t_mask << i;
         }
         node->is_voxels_solid = mask;
         return;
@@ -118,13 +116,8 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
                 malloc_children(node);
             tree_intersections(aabbs[i], triangle, &node->children[i], b_div_2);
         }
+        //If not intersect, do nothing
     }
-    //1 so basically do an intersection test for each level of the octree in a loop
-            //  1.1 Go to child voxel that is a hit
-            //  1.2 Check level, is it the max level? 
-            //      If not make 1.3
-            //  1.3 Check hasChildren, if it has children do intersection test
-            //      if not, create children first and then do 1.3
 }
 
 
@@ -149,13 +142,10 @@ void mesh(int long_resolution, struct model* model){
     printf("Blocking faces in Layer:\n");
     //for each material/layer
     for(int i = 0; i < model->n_layers; i++){
-        printf("%d..\t", i);
+        printf("%d..\n", i);
         //Malloc octree root children and set level
         roots[i].level = max_tree_depth;
         malloc_children(&roots[i]);
-
-
-
         //for each face
         //#omp parallel for
         for(int f = 0; f < model->sizes[i][0]; f++){
