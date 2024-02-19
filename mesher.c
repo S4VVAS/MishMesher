@@ -61,19 +61,6 @@ struct vector3 to_vector3(double* v){
 }
 
 
-void mesh(int long_resolution, struct model* model){
-    double model_long_side = max(model->z_max, max(model->x_max, model->y_max));
-    double cell_size_domain = model_long_side / long_resolution;
-    printf("Each cell in the domain of the model is of size: %f\n", cell_size_domain);
-    double min_size = model_long_side;
-    int max_tree_depth = 0;
-    //We ommit the last layer (by dividing first) due to uint8_t containing the leafs.
-    while((min_size /= 2.0) >= cell_size_domain)
-        max_tree_depth++;
-
-    printf("Max tree depth: %d\n", max_tree_depth);
-    printf("Generating model containing %d cells...\n", long_resolution * long_resolution * long_resolution);
-
     //CL TEST
     /*
     cl_device_id id;
@@ -94,18 +81,64 @@ void mesh(int long_resolution, struct model* model){
 
 */
 
-    
+void tree_intersections(struct aabb box, struct tri* triangle, struct octree* root, double box_size){
+     //If tree is lowest level, look at char children
+     //else loop through child nodes
 
+    //For every child in the current node check for intersections
+    double b_div_2 = box_size * 0.5;
+
+    struct aabb aabbs[8];
+    aabbs[0] = (struct aabb){box.max_x, box.max_y, box.max_z, box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2};
+    aabbs[1] = (struct aabb){box.max_x, box.max_y, box.max_z - b_div_2, box.min_x, box.min_y, box.min_z};
+    aabbs[2] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z, box.min_x + b_div_2, box.min_y, box.min_z};
+    aabbs[3] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z - b_div_2, box.min_x + b_div_2, box.min_y, box.min_z + b_div_2};
+    aabbs[4] = (struct aabb){box.max_x, box.max_y - b_div_2, box.max_z, box.min_x, box.min_y + b_div_2, box.min_z};
+    aabbs[5] = (struct aabb){box.max_x, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x, box.min_y + b_div_2, box.min_z + b_div_2};
+    aabbs[6] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z};
+    aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z + b_div_2};
+
+    for(int i = 0; i < 8; i++){
+
+        
+
+
+    }
+    //1 so basically do an intersection test for each level of the octree in a loop
+            //  1.1 Go to child voxel that is a hit
+            //  1.2 Check level, is it the max level? 
+            //      If not make 1.3
+            //  1.3 Check hasChildren, if it has children do intersection test
+            //      if not, create children first and then do 1.3
+}
+
+
+void mesh(int long_resolution, struct model* model){
+    double min_model_coord = min(model->z_min, min(model->x_min, model->y_min));
+    double max_model_coord = max(model->z_max, max(model->x_max, model->y_max));
+    double model_long_side = abs_v(min_model_coord) + max_model_coord + 1;
+    double cell_size_domain = model_long_side / long_resolution;
+
+    printf("Each cell in the domain of the model is of size: %f\n", cell_size_domain);
+    double min_size = model_long_side;
+    unsigned int max_tree_depth = 0;
+
+    while((min_size /= 8.0) >= cell_size_domain)
+        max_tree_depth++;
+
+    printf("Max tree depth: %d\n", max_tree_depth);
+    printf("Generating model containing %f cells...\n", 1.0 * long_resolution * long_resolution * long_resolution );
 
     //Malloc an octree for each layer in model
     struct octree* roots = (struct octree*)malloc(sizeof(struct octree) * model->n_layers);
     printf("Blocking faces in Layer:\n");
     //for each material/layer
     for(int i = 0; i < model->n_layers; i++){
-        //printf("%d..\t", i);
+        printf("%d..\t", i);
         //Malloc octree root children and set level
         roots[i].level = 0;
         malloc_children(roots[i]);
+
 
 
         //for each face
@@ -119,22 +152,18 @@ void mesh(int long_resolution, struct model* model){
             
             unsigned int track[max_tree_depth];
 
-            double temp_curr_size = model_long_side;
             //Each time we enter a child, we divide size by 1/2 untill we reach cell size domain * 2, next layer is children = modify char statuses
-            while(temp_curr_size >= cell_size_domain * 2){
-                temp_curr_size /= 2;
-            }
+           // while(temp_curr_size >= cell_size_domain * 2){
+            //    temp_curr_size /= 2;
+            //}
 
-            struct aabb a = {model_long_side,model_long_side,model_long_side, 0,0,0};
+            struct aabb a = {max_model_coord,max_model_coord,max_model_coord, min_model_coord,min_model_coord,min_model_coord};
             struct tri b = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
 
-            printf("%d\n", intersects(&a, &b));
-            //1 so basically do an intersection test for each level of the octree in a loop
-            //  1.1 Go to child voxel that is a hit
-            //  1.2 Check level, is it the max level? 
-            //      If not make 1.3
-            //  1.3 Check hasChildren, if it has children do intersection test
-            //      if not, create children first and then do 1.3
+            tree_intersections(a, &b, &roots[i], model_long_side);
+
+            
+            
             
 
 
@@ -143,7 +172,14 @@ void mesh(int long_resolution, struct model* model){
             //Read out the trees into format
 
         }
-        if((i+1)%10 == 0)
-            printf("\n");
+
+
+       // if((i+1)%10 == 0)
+       //     printf("\n");
     }
+
+    free(roots);
+
 }
+
+

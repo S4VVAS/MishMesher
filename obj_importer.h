@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <float.h>
 #include "model_mesh.h"
 
 void close_file(FILE* file);

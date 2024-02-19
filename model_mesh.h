@@ -26,7 +26,7 @@ struct material_group{
 //Main model
 struct model{
     //layer sizes = [L1[n_points, n_faces], L2[n_points, n_faces],...]
-    double x_max, y_max, z_max;
+    double x_max, y_max, z_max, x_min, y_min, z_min;
     double **points;
     int n_layers;
     int** sizes;

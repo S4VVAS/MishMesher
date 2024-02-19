@@ -25,14 +25,6 @@ double dot_p(struct vector3 v1, struct vector3 v2){
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-double* dpvec_minus_dpvec(double *v1, double *v2){
-    double *res = (double*)malloc(sizeof(double) * 3);
-    res[0] = v1[0] - v2[0];
-    res[1] = v1[1] - v2[1];
-    res[2] = v1[2] - v2[2];
-    return res;
-}
-
 struct vector3 vec3_minus(struct vector3 v1, struct vector3 v2){
     struct vector3 res = {
         v1.x - v2.x, 
@@ -41,11 +33,7 @@ struct vector3 vec3_minus(struct vector3 v1, struct vector3 v2){
     return res;
 }
 
-
-
-
-
-
+/*
 bool intersects(struct aabb *box, struct tri *triangle){
     //SETUP STAGE (TODO: is there anything to PRECOMPUTE?)
     struct vector3 box_extents;
@@ -87,7 +75,7 @@ bool intersects(struct aabb *box, struct tri *triangle){
         double p2 = dot_p(triangle->v2, axis[i]);
         double p3 = dot_p(triangle->v3, axis[i]);
 
-        float r = 
+        double r = 
             box_extents.x * abs_v(dot_p(box_face_norms.v1, axis[i])) +
             box_extents.y * abs_v(dot_p(box_face_norms.v2, axis[i])) +
             box_extents.z * abs_v(dot_p(box_face_norms.v3, axis[i]));
@@ -114,14 +102,53 @@ bool intersects(struct aabb *box, struct tri *triangle){
     return true;
 
 }
+*/
 
+// Function to test intersection between an AABB and a triangle
+bool intersects(struct aabb* box, struct tri* triangle) {
+    // Check if any vertex of the triangle is inside the AABB
+    if ((triangle->v1.x >= box->min_x && triangle->v1.x <= box->max_x) &&
+        (triangle->v1.y >= box->min_y && triangle->v1.y <= box->max_y) &&
+        (triangle->v1.z >= box->min_z && triangle->v1.z <= box->max_z)) {
+        return true;
+    }
+    if ((triangle->v2.x >= box->min_x && triangle->v2.x <= box->max_x) &&
+        (triangle->v2.y >= box->min_y && triangle->v2.y <= box->max_y) &&
+        (triangle->v2.z >= box->min_z && triangle->v2.z <= box->max_z)) {
+        return true;
+    }
+    if ((triangle->v3.x >= box->min_x && triangle->v3.x <= box->max_x) &&
+        (triangle->v3.y >= box->min_y && triangle->v3.y <= box->max_y) &&
+        (triangle->v3.z >= box->min_z && triangle->v3.z <= box->max_z)) {
+        return true;
+    }
 
+    // Möller–Trumbore intersection algorithm
+    struct vector3 e1 = vec3_minus(triangle->v2, triangle->v1);
+    struct vector3 e2 = vec3_minus(triangle->v3, triangle->v1);
+    struct vector3 h = cross_p((struct vector3){0.0, 1.0, 0.0}, e2);
+    double a = dot_p(e1, h);
 
-    //1 so basically do an intersection test for each level of the octree in a loop
-            //  1.1 Go to child voxel that is a hit
-            //  1.2 Check level, is it the max level? 
-            //      If not make 1.3
-            //  1.3 Check hasChildren, if it has children do intersection test
-            //      if not, create children first and then do 1.3
-            
+    if (a > -DBL_EPSILON && a < DBL_EPSILON) {
+        return false; // The ray is parallel to the triangle.
+    }
 
+    double f = 1.0 / a;
+    struct vector3 s = vec3_minus(*(struct vector3*)box, triangle->v1);
+    double u = f * dot_p(s, h);
+
+    if (u < 0.0 || u > 1.0) {
+        return false;
+    }
+
+    struct vector3 q = cross_p(s, e1);
+    double v = f * dot_p((struct vector3){0.0, 1.0, 0.0}, q);
+
+    if (v < 0.0 || u + v > 1.0) {
+        return false;
+    }
+
+    double t = f * dot_p(e2, q);
+
+    return t > DBL_EPSILON;
+}

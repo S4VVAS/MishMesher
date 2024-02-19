@@ -22,4 +22,4 @@ test: mesh
 	./mishmesh "models/g7.obj" 64 0 10
 	
 test_complex: mesh
-	./mishmesh "models/Seahawk.obj" 1024 0 10
+	./mishmesh "models/Seahawk.obj" 4096 0 10

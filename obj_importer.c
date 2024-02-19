@@ -9,7 +9,7 @@
 #define STRMAX 1024
 
 int imported_number_of_layers = 0;
-double x_max = 0, y_max = 0, z_max = 0;
+double x_max = DBL_MIN, y_max = DBL_MIN, z_max = DBL_MIN, x_min = DBL_MAX, y_min = DBL_MAX, z_min = DBL_MAX;
 
 void close_file(FILE* file){
     if (fclose(file))
@@ -77,6 +77,13 @@ void parse_vector(const char* line, struct model* mesh, int* n){
         y_max = coordinates[1];
     if (coordinates[2] > z_max)
         z_max = coordinates[2];
+
+    if (coordinates[0] < x_min)
+        x_min = coordinates[0];
+    if (coordinates[1] < y_min)
+        y_min = coordinates[1];
+    if (coordinates[2] < z_min)
+        z_min = coordinates[2];
 
     mesh->points[n[1]][0] = coordinates[0];
     mesh->points[n[1]][1] = coordinates[1];
@@ -208,6 +215,9 @@ struct model* parse_mesh(FILE* file){
     mesh->x_max = x_max;
     mesh->y_max = y_max;
     mesh->z_max = z_max;
+    mesh->x_min = x_min;
+    mesh->y_min = y_min;
+    mesh->z_min = z_min;
 
     printf("finnished model parsing\n\n");
 
