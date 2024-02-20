@@ -19,7 +19,7 @@ clean:
 
 #  model-path  long-resolution  edge-buffer-size chunk-size opt:output-file-name  opt:core-count
 test: mesh
-	./mishmesh "models/g7.obj" 64 0 10
+	./mishmesh "models/g7.obj" 2097152 0 10
 	
 test_complex: mesh
 	./mishmesh "models/Seahawk.obj" 2097152 0 10

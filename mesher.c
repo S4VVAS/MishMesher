@@ -101,12 +101,11 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     if(node->level <= 1){
         uint8_t mask = 0; // 00000000
         for(int i = 0; i < 8; i++){
-            uint8_t t_mask = 1; // 00000001
             if(intersects(&aabbs[i], triangle))
                 //Shift by i to set correct child
-                mask = mask | t_mask << i;
+                mask = mask | 1 << i;
         }
-        node->is_voxels_solid = mask;
+        node->is_voxels_solid = node->is_voxels_solid | mask;
         return;
     }
 
@@ -166,12 +165,6 @@ void mesh(int long_resolution, struct model* model){
             struct tri b = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
 
             tree_intersections(a, &b, &roots[i], model_long_side);
-
-            
-            
-            
-
-
 
             //Basically populate a octree for each material with the voxel states
             //Read out the trees into format
