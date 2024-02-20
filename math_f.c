@@ -104,6 +104,9 @@ bool intersects(struct aabb *box, struct tri *triangle){
 }
 */
 
+//Based on paper:
+//https://my.eng.utah.edu/~cs6958/papers/MT97.pdf
+
 // Function to test intersection between an AABB and a triangle
 bool intersects(struct aabb* box, struct tri* triangle) {
     // Check if any vertex of the triangle is inside the AABB
