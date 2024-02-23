@@ -47,7 +47,6 @@ struct octree{
     bool hasChildren;
 
     //Used to eaily calculate size of blocks
-    
 
     struct octree *children;
 };

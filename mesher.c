@@ -171,6 +171,21 @@ void mesh(int long_resolution, struct model* model){
 
         }
 
+        char path[256];
+        sprintf(path, "obj_converted/%d.obj", i);
+
+        /*struct octree tmp = {0, 2, false, true};
+        malloc_children(&tmp);
+
+        tmp.children[0].is_voxels_solid = 255;
+        tmp.children[1].is_voxels_solid = 150;
+        tmp.children[7].is_voxels_solid = 105;
+        
+        obj_convert(&tmp, path, model_long_side);
+
+        free(tmp.children);*/
+        obj_convert(&roots[i], path, model_long_side);
+
 
        // if((i+1)%10 == 0)
        //     printf("\n");

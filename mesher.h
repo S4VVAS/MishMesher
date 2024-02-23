@@ -6,6 +6,7 @@
 #include "cartesian_mesh.h"
 #include "model_mesh.h"
 #include "math_f.h"
+#include "obj_converter.h"
 
 
 

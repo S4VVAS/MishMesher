@@ -1,5 +1,9 @@
-LINKED= obj_importer.c mesher.c math_f.c
+LINKED= obj_importer.c mesher.c math_f.c obj_converter.c
 OS := $(shell uname)
+
+OBJ_DIR = obj_converted
+OBJ_FILES = $(wildcard $(OBJ_DIR)/*.obj)
+
 OPTIONS:=
 
 ifeq ($(OS),Darwin)
@@ -16,6 +20,7 @@ mesh: clean
 
 clean:
 	rm -f ./mishmesh *.o
+	rm -f $(OBJ_FILES)
 
 #  model-path  long-resolution  edge-buffer-size chunk-size opt:output-file-name  opt:core-count
 test: mesh
