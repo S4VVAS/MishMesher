@@ -130,11 +130,20 @@ void mesh(int long_resolution, struct model* model){
             unsigned int track[max_tree_depth];
 
             //Create AABB the size of the domain
-            struct aabb a = {max_model_coord,max_model_coord,max_model_coord, min_model_coord,min_model_coord,min_model_coord};
+            struct aabb box = {max_model_coord,max_model_coord,max_model_coord, min_model_coord,min_model_coord,min_model_coord};
             //Create a triangle struct based on the parsed vertices
-            struct tri b = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
 
-            tree_intersections(a, &b, &roots[i], model_long_side);
+            if(v4 == NULL){
+                struct tri triangle = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
+                tree_intersections(box, &triangle, &roots[i], model_long_side);
+            }
+            else{
+                struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
+                struct tri triangle_b = {to_vector3(v4), to_vector3(v3), to_vector3(v2)};
+                tree_intersections(box, &triangle_a, &roots[i], model_long_side);
+                tree_intersections(box, &triangle_b, &roots[i], model_long_side);
+            }
+            
         }
 
         char path[256];
