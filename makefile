@@ -26,5 +26,8 @@ clean:
 test: mesh
 	./mishmesh "models/g7.obj" 2097152 0 10
 	
+test_simple: mesh
+	./mishmesh "models/square.obj" 2097152 0 10
+	
 test_complex: mesh
 	./mishmesh "models/Seahawk.obj" 2097152 0 10

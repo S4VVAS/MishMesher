@@ -12,7 +12,6 @@ double map[8][3] = {
 };
 
 //Each coord is at top front/left corner of the box
-
 //ptof = print to object file
 unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 offsets, double box_size, unsigned int v_offset){
     double b_div_2 = box_size * 0.5;
@@ -76,14 +75,7 @@ unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 
 
 
 void obj_convert(struct octree* tree, char* path, double box_size){
-
     FILE* file = fopen(path, "w");
-
-    
     traverse_tree_ptof(tree, file, (struct vector3){0,0,0}, box_size, 0);
-
-
-
     fclose(file); 
-
 }

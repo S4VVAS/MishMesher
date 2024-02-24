@@ -1,35 +1,8 @@
 #include "mesher.h"
-/*
-struct c_mesh* create_c_mesh(int long_resolution, struct model* model){
-    struct c_mesh* c_mesh = (struct c_mesh*)malloc(sizeof(struct c_mesh));
-    c_mesh->size = long_resolution;
-    c_mesh->n_materials = model->n_layers;
-    c_mesh->material_offsets = (unsigned int*)malloc(sizeof(unsigned int*) * model->n_layers);
-    //Allocates memory for all coordinates
-    c_mesh->n = long_resolution * long_resolution * long_resolution;
-    c_mesh->blocks = (unsigned int**)malloc(sizeof(unsigned int*) * c_mesh->n);
-
-   //for(int i = 0; i < c_mesh->n; i++)
-    //    c_mesh->blocks[i] = (unsigned int*)malloc(sizeof(unsigned int) * 6);
-
-    return c_mesh;
-}
-
-void destroy_c_mesh(struct c_mesh* c_mesh){
-   // for(int i = 0; i < c_mesh->n; i++)
-    //    free(c_mesh->blocks[i]);
-    free(c_mesh->blocks);
-    free(c_mesh->material_offsets);
-    free(c_mesh);
-}
-*/
 
 #if __STDC_VERSION__ < 201112L || __STDC_NO_ATOMICS__ == 1
 #error "ATOMICS NOT SUPPORTED! CAN'T COMPILE"
 #endif
-
-
-
 
 bool atomic_set(struct octree *node, int solid_child){
     return 0;
@@ -156,39 +129,36 @@ void mesh(int long_resolution, struct model* model){
             
             unsigned int track[max_tree_depth];
 
-            //Each time we enter a child, we divide size by 1/2 untill we reach cell size domain * 2, next layer is children = modify char statuses
-           // while(temp_curr_size >= cell_size_domain * 2){
-            //    temp_curr_size /= 2;
-            //}
-
+            //Create AABB the size of the domain
             struct aabb a = {max_model_coord,max_model_coord,max_model_coord, min_model_coord,min_model_coord,min_model_coord};
+            //Create a triangle struct based on the parsed vertices
             struct tri b = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
 
             tree_intersections(a, &b, &roots[i], model_long_side);
-
-            //Basically populate a octree for each material with the voxel states
-            //Read out the trees into format
-
         }
 
         char path[256];
         sprintf(path, "obj_converted/%d.obj", i);
 
-        /*struct octree tmp = {0, 2, false, true};
+        /*
+        struct octree tmp = {0, 4, false, true};
         malloc_children(&tmp);
 
-        tmp.children[0].is_voxels_solid = 255;
-        tmp.children[1].is_voxels_solid = 150;
-        tmp.children[7].is_voxels_solid = 105;
+        malloc_children(&tmp.children[0]);
+        malloc_children(&tmp.children[7]);
+
+        malloc_children(&tmp.children[0].children[0]);
+        malloc_children(&tmp.children[7].children[7]);
+
+        tmp.children[0].children[0].children[0].is_voxels_solid = 105;
+        tmp.children[7].children[7].children[7].is_voxels_solid = 105;
         
         obj_convert(&tmp, path, model_long_side);
 
-        free(tmp.children);*/
+        free(tmp.children);
+        */
+
         obj_convert(&roots[i], path, model_long_side);
-
-
-       // if((i+1)%10 == 0)
-       //     printf("\n");
     }
 
     free(roots);
