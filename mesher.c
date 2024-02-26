@@ -57,27 +57,33 @@ struct vector3 to_vector3(double* v){
 void tree_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
     
     //For every child in the current node check for intersections
-    double b_div_2 = (abs_v(box.min_x) + box.max_x) * 0.5;
+   // double b_div_2 = box_size * 0.5;
+    // double b_div_2 = (abs_v(box.min_x) + box.max_x) * 0.5;
+    //double b_div_2 = (abs_v(box.min_y) + box.max_y) * 0.5;
+     double b_div_2 = (abs_v(box.min_z) + box.max_z) * 0.5;
+
 
     struct aabb aabbs[8];
-    aabbs[0] = (struct aabb){box.min_x, box.max_y, box.max_z,
+
+    aabbs[0] = (struct aabb){box.max_x, box.max_y, box.max_z,
         box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2};
-    aabbs[1] = (struct aabb){box.min_x, box.max_y, box.max_z - b_div_2, 
+    aabbs[1] = (struct aabb){box.max_x, box.max_y, box.max_z - b_div_2, 
         box.max_x - b_div_2, box.max_y - b_div_2, box.min_z};
+
     aabbs[2] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z, 
-        box.max_x, box.max_y - b_div_2, box.max_z - b_div_2};
+        box.min_x, box.max_y - b_div_2, box.max_z - b_div_2};
     aabbs[3] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z  - b_div_2, 
-        box.max_x, box.max_y - b_div_2, box.min_z};
+        box.min_x, box.max_y - b_div_2, box.min_z};
 
-
-    aabbs[4] = (struct aabb){box.min_x, box.max_y  - b_div_2, box.max_z, 
+    aabbs[4] = (struct aabb){box.max_x, box.max_y  - b_div_2, box.max_z, 
         box.max_x - b_div_2, box.min_y, box.max_z - b_div_2};
-    aabbs[5] = (struct aabb){box.min_x, box.max_y  - b_div_2, box.max_z - b_div_2, 
+    aabbs[5] = (struct aabb){box.max_x, box.max_y  - b_div_2, box.max_z - b_div_2, 
         box.max_x - b_div_2, box.min_y, box.min_z};
+
     aabbs[6] = (struct aabb){box.max_x - b_div_2, box.max_y  - b_div_2, box.max_z, 
-        box.max_x, box.min_y, box.max_z - b_div_2};
+        box.min_x, box.min_y, box.max_z - b_div_2};
     aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y  - b_div_2, box.max_z - b_div_2, 
-        box.max_x, box.min_y, box.min_z};
+        box.min_x, box.min_y, box.min_z};
 
     //If tree is lowest level, look at char leafs
     //Level <= 1 as the last level is the leaf nodes
