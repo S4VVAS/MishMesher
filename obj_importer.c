@@ -169,7 +169,7 @@ void destroy_model(struct model* mesh) {
     }
    
     for(int i = 0; i < mesh->sizes[0][1]; i++)
-        mesh->points[i] = (double*)calloc(3, sizeof(double));
+        free(mesh->points[i]);
 
     free(mesh->points);
     free(mesh->groups);

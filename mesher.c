@@ -57,17 +57,27 @@ struct vector3 to_vector3(double* v){
 void tree_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
     
     //For every child in the current node check for intersections
-    double b_div_2 = box_size * 0.5;
+    double b_div_2 = (abs_v(box.min_x) + box.max_x) * 0.5;
 
     struct aabb aabbs[8];
-    aabbs[0] = (struct aabb){box.max_x, box.max_y, box.max_z, box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2};
-    aabbs[1] = (struct aabb){box.max_x, box.max_y, box.max_z - b_div_2, box.min_x, box.min_y, box.min_z};
-    aabbs[2] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z, box.min_x + b_div_2, box.min_y, box.min_z};
-    aabbs[3] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z - b_div_2, box.min_x + b_div_2, box.min_y, box.min_z + b_div_2};
-    aabbs[4] = (struct aabb){box.max_x, box.max_y - b_div_2, box.max_z, box.min_x, box.min_y + b_div_2, box.min_z};
-    aabbs[5] = (struct aabb){box.max_x, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x, box.min_y + b_div_2, box.min_z + b_div_2};
-    aabbs[6] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z};
-    aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2, box.min_x + b_div_2, box.min_y + b_div_2, box.min_z + b_div_2};
+    aabbs[0] = (struct aabb){box.min_x, box.max_y, box.max_z,
+        box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2};
+    aabbs[1] = (struct aabb){box.min_x, box.max_y, box.max_z - b_div_2, 
+        box.max_x - b_div_2, box.max_y - b_div_2, box.min_z};
+    aabbs[2] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z, 
+        box.max_x, box.max_y - b_div_2, box.max_z - b_div_2};
+    aabbs[3] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z  - b_div_2, 
+        box.max_x, box.max_y - b_div_2, box.min_z};
+
+
+    aabbs[4] = (struct aabb){box.min_x, box.max_y  - b_div_2, box.max_z, 
+        box.max_x - b_div_2, box.min_y, box.max_z - b_div_2};
+    aabbs[5] = (struct aabb){box.min_x, box.max_y  - b_div_2, box.max_z - b_div_2, 
+        box.max_x - b_div_2, box.min_y, box.min_z};
+    aabbs[6] = (struct aabb){box.max_x - b_div_2, box.max_y  - b_div_2, box.max_z, 
+        box.max_x, box.min_y, box.max_z - b_div_2};
+    aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y  - b_div_2, box.max_z - b_div_2, 
+        box.max_x, box.min_y, box.min_z};
 
     //If tree is lowest level, look at char leafs
     //Level <= 1 as the last level is the leaf nodes
@@ -121,22 +131,21 @@ void mesh(int long_resolution, struct model* model){
         //for each face
         //#omp parallel for
         for(int f = 0; f < model->sizes[i][0]; f++){
-            
+            //Get vertices for current face
             double* v1 = model->points[model->groups[i].faces[f][0] - 1];
             double* v2 = model->points[model->groups[i].faces[f][1] - 1];
             double* v3 = model->points[model->groups[i].faces[f][2] - 1];
             double* v4 = model->groups[i].faces[f][3] != 0 ? model->points[model->groups[i].faces[f][3] - 1] : NULL;
             
-            unsigned int track[max_tree_depth];
-
             //Create AABB the size of the domain
             struct aabb box = {max_model_coord,max_model_coord,max_model_coord, min_model_coord,min_model_coord,min_model_coord};
-            //Create a triangle struct based on the parsed vertices
 
+            //If the face is a triangle
             if(v4 == NULL){
                 struct tri triangle = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
                 tree_intersections(box, &triangle, &roots[i], model_long_side);
             }
+            //Else its a square, split into 2 separate triangles and do intersection test on each
             else{
                 struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
                 struct tri triangle_b = {to_vector3(v4), to_vector3(v3), to_vector3(v2)};
