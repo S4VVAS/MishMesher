@@ -115,9 +115,6 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
 
 
 void mesh(int long_resolution, struct model* model){
-  
-
-
     double x_len = len(model->x_min, model->x_max);
     double y_len = len(model->y_min, model->y_max);
     double z_len = len(model->z_min, model->z_max);
