@@ -9,7 +9,18 @@
 int main(int argc, char** argv){
     struct model* model = import_mesh(argv[1]);
     //struct c_mesh* c_mesh = create_c_mesh(atoi(argv[2]), model);
-    mesh(atoi(argv[2]), model);
+
+    //Correct resolution if needed
+    int res = atoi(argv[2]);
+    int new_res = 8;
+    while(new_res < res)
+        new_res *= 8;
+    if(res != new_res){
+        res = new_res;
+        printf("Warning: resolution not an exponent of 8, resizing up to nearest exponent -> %d\n", new_res);
+    }
+
+    mesh(res, model);
 
     destroy_model(model);
 

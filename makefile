@@ -27,7 +27,7 @@ test: mesh
 	./mishmesh "models/g7.obj" 2097152 0 10
 	
 test_simple: mesh
-	./mishmesh "models/square.obj" 4096 0 10
+	./mishmesh "models/square.obj" 200000 0 10
 	
 test_complex: mesh
 	./mishmesh "models/Seahawk.obj" 2097152 0 10

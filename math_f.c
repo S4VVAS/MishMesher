@@ -12,6 +12,10 @@ double abs_v(double val){
     return val < 0 ? -val : val;
 }
 
+double len(double d1, double d2){
+    return abs_v(d1 - d2);
+}
+
 struct vector3 cross_p(struct vector3 v1, struct vector3 v2){
     struct vector3 res = {
         v1.y * v2.z - v1.z * v2.y,

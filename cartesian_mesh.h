@@ -40,7 +40,7 @@ struct cc_mesh{
 struct octree{
     //bool isLeaf;
 
-    _Atomic uint8_t is_voxels_solid;
+    _Atomic char is_voxels_solid;
     char level;
 
     bool isMallocing;

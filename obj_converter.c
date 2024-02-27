@@ -12,7 +12,7 @@ double map[8][3] = {
 };
 
 
-//Each coord is at top front/left corner of the box
+//Each coord is at top front/right corner of the box
 //ptof = print to object file
 unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 offsets, double box_size, unsigned int v_offset){
     double b_div_2 = box_size * 0.5;

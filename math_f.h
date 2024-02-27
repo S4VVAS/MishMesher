@@ -12,6 +12,8 @@ double min(double i, double j);
 
 double abs_v(double val);
 
+double len(double d1, double d2);
+
 struct vector3  cross_p(struct vector3 v1, struct vector3 v2);
 
 double dot_p(struct vector3 v1, struct vector3 v2);

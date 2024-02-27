@@ -57,12 +57,15 @@ struct vector3 to_vector3(double* v){
 void tree_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
     
     //For every child in the current node check for intersections
-   // double b_div_2 = box_size * 0.5;
-    // double b_div_2 = (abs_v(box.min_x) + box.max_x) * 0.5;
-    //double b_div_2 = (abs_v(box.min_y) + box.max_y) * 0.5;
-     double b_div_2 = (abs_v(box.min_z) + box.max_z) * 0.5;
+    double b_div_2 = box_size * 0.5;
+    //double b_div_2 = (abs_v(box.min_x + box.max_x) * 0.5;
+    //double b_div_2 = (abs_v(box.min_y + box.max_y) * 0.5;
+    //double b_div_2 = (abs_v(box.min_z + box.max_z) * 0.5;
 
 
+   // printf("aabb len -> x \t%f\ty %f\tz %f\n", len(box.min_x, box.max_x),len(box.min_y, box.max_y),len(box.min_z, box.max_z));
+   // printf("max/2 + max = %f -- bdiv = %f\n\n", len(box.max_x - b_div_2, box.max_x), b_div_2);
+   
     struct aabb aabbs[8];
 
     aabbs[0] = (struct aabb){box.max_x, box.max_y, box.max_z,
@@ -109,14 +112,23 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
 }
 
 
+
+
 void mesh(int long_resolution, struct model* model){
+  
+
+
+    double x_len = len(model->x_min, model->x_max);
+    double y_len = len(model->y_min, model->y_max);
+    double z_len = len(model->z_min, model->z_max);
+
     double min_model_coord = min(model->z_min, min(model->x_min, model->y_min));
     double max_model_coord = max(model->z_max, max(model->x_max, model->y_max));
-    double model_long_side = abs_v(min_model_coord) + max_model_coord + 1;
-    double cell_size_domain = model_long_side / long_resolution;
+    double model_len = len(min_model_coord,max_model_coord);
+    double cell_size_domain = max(x_len, max(y_len, z_len)) / long_resolution;
 
-    printf("Each cell in the domain of the model is of size: %f\n", cell_size_domain);
-    double min_size = model_long_side;
+    printf("Each cell in the domain of the model is of size: %f from %f\n", cell_size_domain,  model_len);
+    double min_size = model_len;
     unsigned int max_tree_depth = 0;
 
     while((min_size /= 8.0) >= cell_size_domain)
@@ -142,21 +154,21 @@ void mesh(int long_resolution, struct model* model){
             double* v2 = model->points[model->groups[i].faces[f][1] - 1];
             double* v3 = model->points[model->groups[i].faces[f][2] - 1];
             double* v4 = model->groups[i].faces[f][3] != 0 ? model->points[model->groups[i].faces[f][3] - 1] : NULL;
-            
+            //printf("\n");
             //Create AABB the size of the domain
             struct aabb box = {max_model_coord,max_model_coord,max_model_coord, min_model_coord,min_model_coord,min_model_coord};
 
             //If the face is a triangle
             if(v4 == NULL){
                 struct tri triangle = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
-                tree_intersections(box, &triangle, &roots[i], model_long_side);
+                tree_intersections(box, &triangle, &roots[i], model_len);
             }
             //Else its a square, split into 2 separate triangles and do intersection test on each
             else{
                 struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
                 struct tri triangle_b = {to_vector3(v4), to_vector3(v3), to_vector3(v2)};
-                tree_intersections(box, &triangle_a, &roots[i], model_long_side);
-                tree_intersections(box, &triangle_b, &roots[i], model_long_side);
+                tree_intersections(box, &triangle_a, &roots[i], model_len);
+                tree_intersections(box, &triangle_b, &roots[i], model_len);
             }
             
         }
@@ -182,7 +194,7 @@ void mesh(int long_resolution, struct model* model){
         free(tmp.children);
         */
 
-        obj_convert(&roots[i], path, model_long_side);
+        obj_convert(&roots[i], path, model_len);
     }
 
     free(roots);
