@@ -128,7 +128,7 @@ void mesh(int long_resolution, struct model* model){
     double min_size = model_len;
     unsigned int max_tree_depth = 0;
 
-    while((min_size /= 8.0) >= cell_size_domain)
+    while((min_size /= 2.0) >= cell_size_domain)
         max_tree_depth++;
 
     printf("Max tree depth: %d\n", max_tree_depth);

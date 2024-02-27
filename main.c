@@ -12,12 +12,12 @@ int main(int argc, char** argv){
 
     //Correct resolution if needed
     int res = atoi(argv[2]);
-    int new_res = 8;
+    int new_res = 2;
     while(new_res < res)
-        new_res *= 8;
+        new_res *= 2;
     if(res != new_res){
         res = new_res;
-        printf("Warning: resolution not an exponent of 8, resizing up to nearest exponent -> %d\n", new_res);
+        printf("Warning: resolution not an exponent of 2, resizing up to nearest exponent -> %d\n", new_res);
     }
 
     mesh(res, model);
