@@ -1,11 +1,11 @@
 #pragma once
 
-struct aabb {
-    double max_x, max_y, max_z, min_x, min_y, min_z;
-};
-
 struct vector3{
     double x, y, z;
+};
+
+struct aabb {
+    struct vector3 max, min;
 };
 
 struct tri {

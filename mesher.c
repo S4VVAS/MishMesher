@@ -68,25 +68,25 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
    
     struct aabb aabbs[8];
 
-    aabbs[0] = (struct aabb){box.max_x, box.max_y, box.max_z,
-        box.max_x - b_div_2, box.max_y - b_div_2, box.max_z - b_div_2};
-    aabbs[1] = (struct aabb){box.max_x, box.max_y, box.max_z - b_div_2, 
-        box.max_x - b_div_2, box.max_y - b_div_2, box.min_z};
+    aabbs[0] = (struct aabb){box.max.x, box.max.y, box.max.z,
+        box.max.x - b_div_2, box.max.y - b_div_2, box.max.z - b_div_2};
+    aabbs[1] = (struct aabb){box.max.x, box.max.y, box.max.z - b_div_2, 
+        box.max.x - b_div_2, box.max.y - b_div_2, box.min.z};
 
-    aabbs[2] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z, 
-        box.min_x, box.max_y - b_div_2, box.max_z - b_div_2};
-    aabbs[3] = (struct aabb){box.max_x - b_div_2, box.max_y, box.max_z  - b_div_2, 
-        box.min_x, box.max_y - b_div_2, box.min_z};
+    aabbs[2] = (struct aabb){box.max.x - b_div_2, box.max.y, box.max.z, 
+        box.min.x, box.max.y - b_div_2, box.max.z - b_div_2};
+    aabbs[3] = (struct aabb){box.max.x - b_div_2, box.max.y, box.max.z  - b_div_2, 
+        box.min.x, box.max.y - b_div_2, box.min.z};
 
-    aabbs[4] = (struct aabb){box.max_x, box.max_y  - b_div_2, box.max_z, 
-        box.max_x - b_div_2, box.min_y, box.max_z - b_div_2};
-    aabbs[5] = (struct aabb){box.max_x, box.max_y  - b_div_2, box.max_z - b_div_2, 
-        box.max_x - b_div_2, box.min_y, box.min_z};
+    aabbs[4] = (struct aabb){box.max.x, box.max.y  - b_div_2, box.max.z, 
+        box.max.x - b_div_2, box.min.y, box.max.z - b_div_2};
+    aabbs[5] = (struct aabb){box.max.x, box.max.y  - b_div_2, box.max.z - b_div_2, 
+        box.max.x - b_div_2, box.min.y, box.min.z};
 
-    aabbs[6] = (struct aabb){box.max_x - b_div_2, box.max_y  - b_div_2, box.max_z, 
-        box.min_x, box.min_y, box.max_z - b_div_2};
-    aabbs[7] = (struct aabb){box.max_x - b_div_2, box.max_y  - b_div_2, box.max_z - b_div_2, 
-        box.min_x, box.min_y, box.min_z};
+    aabbs[6] = (struct aabb){box.max.x - b_div_2, box.max.y  - b_div_2, box.max.z, 
+        box.min.x, box.min.y, box.max.z - b_div_2};
+    aabbs[7] = (struct aabb){box.max.x - b_div_2, box.max.y  - b_div_2, box.max.z - b_div_2, 
+        box.min.x, box.min.y, box.min.z};
 
     //If tree is lowest level, look at char leafs
     //Level <= 1 as the last level is the leaf nodes
