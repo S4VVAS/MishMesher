@@ -40,11 +40,47 @@ struct vector3 vec3_sub(struct vector3 v1, struct vector3 v2){
     return res;
 }
 
+#define AXISTEST_X01(a, b, fa, fb)			                        \
+	 p0 = a*v0.y - b*v0.z;			       	                        \
+	 p2 = a*v2.y - b*v2.z;			       	                        \
+        if(p0<p2) {min_v=p0; max_v=p2;} else {min_v=p2; max_v=p0;}  \
+	 rad = fa * boxhalfsize + fb * boxhalfsize;                     \
+	if(min_v>rad || max_v<-rad) return 0;
 
+#define AXISTEST_X2(a, b, fa, fb)			                        \
+	 p0 = a*v0.y - b*v0.z;			                                \
+	 p1 = a*v1.y - b*v1.z;			       	                        \
+        if(p0<p1) {min_v=p0; max_v=p1;} else {min_v=p1; max_v=p0;}  \
+	 rad = fa * boxhalfsize + fb * boxhalfsize;                     \
+	if(min_v>rad || max_v<-rad) return 0;
 
+#define AXISTEST_Y02(a, b, fa, fb)			                        \
+	 p0 = -a*v0.x + b*v0.z;		      	                            \
+	 p2 = -a*v2.x + b*v2.z;	       	       	                        \
+        if(p0<p2) {min_v=p0; max_v=p2;} else {min_v=p2; max_v=p0;}  \
+	 rad = fa * boxhalfsize + fb * boxhalfsize;                     \
+	if(min_v>rad || max_v<-rad) return 0;
 
+#define AXISTEST_Y1(a, b, fa, fb)			                        \
+	 p0 = -a*v0.x + b*v0.z;		      	                            \
+	 p1 = -a*v1.x + b*v1.z;	     	       	                        \
+        if(p0<p1) {min_v=p0; max_v=p1;} else {min_v=p1; max_v=p0;}  \
+	 rad = fa * boxhalfsize + fb * boxhalfsize;                     \
+	if(min_v>rad || max_v<-rad) return 0;
 
-
+#define AXISTEST_Z12(a, b, fa, fb)			                        \
+	 p1 = a*v1.x - b*v1.y;			                                \
+	 p2 = a*v2.x - b*v2.y;			       	                        \
+        if(p2<p1) {min_v=p2; max_v=p1;} else {min_v=p1; max_v=p2;}  \
+	 rad = fa * boxhalfsize + fb * boxhalfsize;                     \
+	if(min_v>rad || max_v<-rad) return 0;
+    
+#define AXISTEST_Z0(a, b, fa, fb)			                        \
+	 p0 = a*v0.x - b*v0.y;				                            \
+	 p1 = a*v1.x - b*v1.y;			                                \
+        if(p0<p1) {min_v=p0; max_v=p1;} else {min_v=p1; max_v=p0;}  \
+	 rad = fa * boxhalfsize + fb * boxhalfsize;                     \
+	if(min_v>rad || max_v<-rad) return 0;
 
 int planeBoxOverlap(struct vector3 normal, struct vector3 vert, double maxbox){
     int q;
@@ -88,66 +124,6 @@ int planeBoxOverlap(struct vector3 normal, struct vector3 vert, double maxbox){
     return 0;
 }
 
-
-/*======================== X-tests ========================*/
-
-#define AXISTEST_X01(a, b, fa, fb)			   \
-	 p0 = a*v0.y - b*v0.z;			       	   \
-	 p2 = a*v2.y - b*v2.z;			       	   \
-        if(p0<p2) {min_v=p0; max_v=p2;} else {min_v=p2; max_v=p0;} \
-	 rad = fa * boxhalfsize + fb * boxhalfsize;   \
-	if(min_v>rad || max_v<-rad) return 0;
-
-
-#define AXISTEST_X2(a, b, fa, fb)			   \
-	 p0 = a*v0.y - b*v0.z;			           \
-	 p1 = a*v1.y - b*v1.z;			       	   \
-        if(p0<p1) {min_v=p0; max_v=p1;} else {min_v=p1; max_v=p0;} \
-	 rad = fa * boxhalfsize + fb * boxhalfsize;   \
-	if(min_v>rad || max_v<-rad) return 0;
-
-
-
-/*======================== Y-tests ========================*/
-
-#define AXISTEST_Y02(a, b, fa, fb)			   \
-	 p0 = -a*v0.x + b*v0.z;		      	   \
-	 p2 = -a*v2.x + b*v2.z;	       	       	   \
-        if(p0<p2) {min_v=p0; max_v=p2;} else {min_v=p2; max_v=p0;} \
-	 rad = fa * boxhalfsize + fb * boxhalfsize;   \
-	if(min_v>rad || max_v<-rad) return 0;
-
-
-
-#define AXISTEST_Y1(a, b, fa, fb)			   \
-	 p0 = -a*v0.x + b*v0.z;		      	   \
-	 p1 = -a*v1.x + b*v1.z;	     	       	   \
-        if(p0<p1) {min_v=p0; max_v=p1;} else {min_v=p1; max_v=p0;} \
-	 rad = fa * boxhalfsize + fb * boxhalfsize;   \
-	if(min_v>rad || max_v<-rad) return 0;
-
-
-
-/*======================== Z-tests ========================*/
-#define AXISTEST_Z12(a, b, fa, fb)			   \
-	 p1 = a*v1.x - b*v1.y;			           \
-	 p2 = a*v2.x - b*v2.y;			       	   \
-        if(p2<p1) {min_v=p2; max_v=p1;} else {min_v=p1; max_v=p2;} \
-	 rad = fa * boxhalfsize + fb * boxhalfsize;   \
-	if(min_v>rad || max_v<-rad) return 0;
-
-
-
-#define AXISTEST_Z0(a, b, fa, fb)			   \
-	 p0 = a*v0.x - b*v0.y;				   \
-	 p1 = a*v1.x - b*v1.y;			           \
-        if(p0<p1) {min_v=p0; max_v=p1;} else {min_v=p1; max_v=p0;} \
-	 rad = fa * boxhalfsize + fb * boxhalfsize;   \
-	if(min_v>rad || max_v<-rad) return 0;
-
-
-
-
 int triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* triangle){
     struct vector3 v0, v1, v2;
     double min_v, max_v, p0, p1, p2, rad, fex, fey, fez;
@@ -157,10 +133,9 @@ int triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* tria
     v1 = vec3_sub(triangle->v2, boxcenter);
     v2 = vec3_sub(triangle->v3, boxcenter);
 
-    e0 = vec3_sub(v1,v0);      /* tri edge 0 */
-    e1 = vec3_sub(v2,v1);      /* tri edge 1 */
-    e2 = vec3_sub(v0,v2);      /* tri edge 2 */
-
+    e0 = vec3_sub(v1,v0);
+    e1 = vec3_sub(v2,v1);
+    e2 = vec3_sub(v0,v2);
 
     fex = abs_v(e0.x);
     fey = abs_v(e0.y);
@@ -188,28 +163,22 @@ int triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* tria
 
     min_v = min(v0.x, min( v1.x, v2.x));
     max_v = max(v0.x, max( v1.x, v2.x));
-
     if(min_v > boxhalfsize || max_v < -boxhalfsize)
         return 0;
 
     min_v = min(v0.y, min( v1.y, v2.y));
     max_v = max(v0.y, max( v1.y, v2.y));
-
     if(min_v > boxhalfsize || max_v < -boxhalfsize) 
         return 0;
 
     min_v = min(v0.z, min( v1.z, v2.z));
     max_v = max(v0.z, max( v1.z, v2.z));
-
     if(min_v >boxhalfsize || max_v < -boxhalfsize) 
         return 0;
 
     normal = cross_p(e0, e1);
-
     if(!planeBoxOverlap(normal, v0, boxhalfsize)) 
         return 0;
-
-    //box and triangle overlaps!
     return 1;
 
 }
@@ -224,140 +193,7 @@ bool intersects(struct aabb *box, struct tri *triangle, double b_div_2){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
-#include <string.h>
-
-bool intersects(struct aabb *box, struct tri *triangle, double b_div_2){
-    struct aabb t_box;
-    memcpy(&t_box, box, sizeof(struct aabb));
-    struct tri t_tri;
-    memcpy(&t_tri, triangle, sizeof(struct tri));
-
-    struct vector3 box_center = {box->max.x - b_div_2, box->max.y - b_div_2, box->max.z - b_div_2};
-    t_box.max = vec3_minus(t_box.max, box_center);
-    t_box.min = vec3_minus(t_box.min, box_center);
-    t_tri.v1 = vec3_minus(t_tri.v1, box_center);
-    t_tri.v2 = vec3_minus(t_tri.v2, box_center);
-    t_tri.v3 = vec3_minus(t_tri.v3, box_center);
-
-    struct tri box_face_norms;
-    box_face_norms.v1 = (struct vector3){1.0, 0.0, 0.0};
-    box_face_norms.v2 = (struct vector3){0.0, 1.0, 0.0};
-    box_face_norms.v3 = (struct vector3){0.0, 0.0, 1.0};
-
-    struct vector3 axis[9];
-    axis[0] = cross_p(box_face_norms.v1, t_tri.v1);
-    axis[1] = cross_p(box_face_norms.v1, t_tri.v2);
-    axis[2] = cross_p(box_face_norms.v1, t_tri.v3);
-    axis[3] = cross_p(box_face_norms.v2, t_tri.v1);
-    axis[4] = cross_p(box_face_norms.v2, t_tri.v2);
-    axis[5] = cross_p(box_face_norms.v2, t_tri.v3);
-    axis[6] = cross_p(box_face_norms.v3, t_tri.v1);
-    axis[7] = cross_p(box_face_norms.v3, t_tri.v2);
-    axis[8] = cross_p(box_face_norms.v3, t_tri.v3);
-
-    //SAT TESTS for first 9 axis
-    for(int i = 0; i < 9; i++){
-        double p1 = dot_p(t_tri.v1, axis[i]);
-        double p2 = dot_p(t_tri.v2, axis[i]);
-        double p3 = dot_p(t_tri.v3, axis[i]);
-
-        double r = 
-            b_div_2 * abs_v(dot_p(box_face_norms.v1, axis[i])) +
-            b_div_2 * abs_v(dot_p(box_face_norms.v2, axis[i])) +
-            b_div_2 * abs_v(dot_p(box_face_norms.v3, axis[i]));
-
-        if (max(-max(p1, max(p2, p3)), min(p1, max(p2, p3))) > r)
-            return false;
-    }
-
-
-    if(max(-max(dot_p(triangle->v1, box_face_norms.v1), max(dot_p(triangle->v2, box_face_norms.v1), dot_p(triangle->v3, box_face_norms.v1))), 
-        min(dot_p(triangle->v1, box_face_norms.v1), min(dot_p(triangle->v2, box_face_norms.v1), dot_p(triangle->v3, box_face_norms.v1)))) > box_extents.x)
-        return false;
-    if(max(-max(dot_p(triangle->v1, box_face_norms.v2), max(dot_p(triangle->v2, box_face_norms.v2), dot_p(triangle->v3, box_face_norms.v2))), 
-        min(dot_p(triangle->v1, box_face_norms.v2), min(dot_p(triangle->v2, box_face_norms.v2), dot_p(triangle->v3, box_face_norms.v2)))) > box_extents.y)
-        return false;
-    if(max(-max(dot_p(triangle->v1, box_face_norms.v3), max(dot_p(triangle->v2, box_face_norms.v3), dot_p(triangle->v3, box_face_norms.v3))), 
-        min(dot_p(triangle->v1, box_face_norms.v3), min(dot_p(triangle->v2, box_face_norms.v3), dot_p(triangle->v3, box_face_norms.v3)))) > box_extents.z)
-        return false;
-
-    struct vector3 tri_norm = cross_p(tri_edge_vec.v1, tri_edge_vec.v2);
-    if(max(-max(dot_p(triangle->v1, tri_norm), max(dot_p(triangle->v2, tri_norm), dot_p(triangle->v3, tri_norm))), 
-        min(dot_p(triangle->v1, tri_norm), min(dot_p(triangle->v2, tri_norm), dot_p(triangle->v3, tri_norm)))) > 0.0)
-        return false;
-
-    return true;
-
-}
-
-
-
-
-
-
-
-//Project point in original x,y,z coodinate domain onto a specified axis.
-//Axis/plane of projection represented as a vector originating from coordinates 0,0,0.
-double get_proj_coordinates(struct vector3 axis, struct vector3 projected_point){
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //Based on paper:
 //https://my.eng.utah.edu/~cs6958/papers/MT97.pdf
 #include <float.h>
