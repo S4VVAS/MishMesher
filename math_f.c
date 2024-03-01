@@ -158,8 +158,8 @@ int triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* tria
     v2 = vec3_sub(triangle->v3, boxcenter);
 
     e0 = vec3_sub(v1,v0);      /* tri edge 0 */
-    e0 = vec3_sub(v2,v1);      /* tri edge 1 */
-    e0 = vec3_sub(v0,v2);      /* tri edge 2 */
+    e1 = vec3_sub(v2,v1);      /* tri edge 1 */
+    e2 = vec3_sub(v0,v2);      /* tri edge 2 */
 
 
     fex = abs_v(e0.x);
