@@ -19,4 +19,4 @@ struct vector3  cross_p(struct vector3 v1, struct vector3 v2);
 double dot_p(struct vector3 v1, struct vector3 v2);
 
 
-bool intersects(struct aabb *box, struct tri *triangle);
+bool intersects(struct aabb *box, struct tri *triangle, double b_div_2);

@@ -34,38 +34,10 @@ struct vector3 to_vector3(double* v){
 }
 
 
-    //CL TEST
-    /*
-    cl_device_id id;
-    cl_uint n_compute_units;
-    cl_ulong memory;
-
-    int result = clGetDeviceIDs(NULL,CL_DEVICE_TYPE_GPU, 1, &id, NULL);
-    if(result != CL_SUCCESS){
-        printf("something went wrong");
-        return;
-    }
-
-   // clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), &n_compute_units, NULL);
-   // clGetDeviceInfo(memory, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &memory, NULL);
-
-   // printf("MAX C UNITS: %u\n",n_compute_units);
-   // printf("MEMORY AVAILABLE: %uGB\n",memory/1000000000L);
-
-*/
-
 void tree_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
     
     //For every child in the current node check for intersections
     double b_div_2 = box_size * 0.5;
-    //double b_div_2 = (abs_v(box.min_x + box.max_x) * 0.5;
-    //double b_div_2 = (abs_v(box.min_y + box.max_y) * 0.5;
-    //double b_div_2 = (abs_v(box.min_z + box.max_z) * 0.5;
-
-
-   // printf("aabb len -> x \t%f\ty %f\tz %f\n", len(box.min_x, box.max_x),len(box.min_y, box.max_y),len(box.min_z, box.max_z));
-   // printf("max/2 + max = %f -- bdiv = %f\n\n", len(box.max_x - b_div_2, box.max_x), b_div_2);
-   
     struct aabb aabbs[8];
 
     aabbs[0] = (struct aabb){box.max.x, box.max.y, box.max.z,
@@ -93,7 +65,7 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     if(node->level <= 1){
         uint8_t mask = 0; // 00000000
         for(int i = 0; i < 8; i++){
-            if(intersects(&aabbs[i], triangle))
+            if(intersects(&aabbs[i], triangle, b_div_2))
                 //Shift by i to set correct child
                 mask = mask | 1 << i;
         }
@@ -102,7 +74,7 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     }
 
     for(int i = 0; i < 8; i++){
-        if(intersects(&aabbs[i], triangle)){
+        if(intersects(&aabbs[i], triangle, b_div_2)){
             if(!node->hasChildren)
                 malloc_children(node);
             tree_intersections(aabbs[i], triangle, &node->children[i], b_div_2);

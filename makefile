@@ -30,4 +30,4 @@ test_simple: mesh
 	./mishmesh "models/square.obj" 64 0 10
 	
 test_complex: mesh
-	./mishmesh "models/Seahawk.obj" 500 0 10
+	./mishmesh "models/Seahawk.obj" 128 0 10
