@@ -134,8 +134,9 @@ void mesh(int long_resolution, struct model* model){
             }
             //Else its a square, split into 2 separate triangles and do intersection test on each
             else{
-                struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
-                struct tri triangle_b = {to_vector3(v4), to_vector3(v3), to_vector3(v2)};
+                printf("uwheruhweor");
+                struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v4)};
+                struct tri triangle_b = {to_vector3(v4), to_vector3(v2), to_vector3(v3)};
                 tree_intersections(box, &triangle_a, &roots[i], model_len);
                 tree_intersections(box, &triangle_b, &roots[i], model_len);
             }

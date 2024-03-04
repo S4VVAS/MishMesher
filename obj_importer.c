@@ -32,17 +32,19 @@ struct model* import_mesh(char* path){
     return parse_mesh(file);
 }
 
+
+//BUG IN THE PARSE FACE 7//1 -> current cant parse propperly but can if -> 7/0/1
 void parse_face(const char* line, struct model* mesh, int* n){
     char editable_line[STRMAX];
     strcpy(editable_line, line);
 
-    char* v1_tok, *v2_tok, *v3_tok, *v4_tok;
+    char *v1_tok, *v2_tok, *v3_tok, *v4_tok;
     v1_tok = strtok(editable_line, " ");
     v2_tok = strtok(NULL, " ");
     v3_tok = strtok(NULL, " ");
     v4_tok = strtok(NULL, " ");
 
-    char* v1, *v2, *v3, *v4;
+    char *v1, *v2, *v3, *v4;
     v1 = strtok(v1_tok, "/");
     v2 = strtok(v2_tok, "/");
     v3 = strtok(v3_tok, "/");
@@ -52,12 +54,10 @@ void parse_face(const char* line, struct model* mesh, int* n){
     mesh->groups[n[2]].faces[n[0]][0] = atoi(v1);
     mesh->groups[n[2]].faces[n[0]][1] = atoi(v2);
     mesh->groups[n[2]].faces[n[0]][2] = atoi(v3);
-    if(atoi(v3) == atoi(v4))
+    if(atoi(v3) == atoi(v4) || v4_tok == NULL || strlen(v4_tok) <= 0)
         mesh->groups[n[2]].faces[n[0]][3] = 0;
     else
         mesh->groups[n[2]].faces[n[0]][3] = atoi(v4);
-
-    //printf("%d %d %d %d\n", mesh->groups[n[2]].faces[n[0]][0],mesh->groups[n[2]].faces[n[0]][1],mesh->groups[n[2]].faces[n[0]][2],mesh->groups[n[2]].faces[n[0]][3]);
 }
 
 void parse_vector(const char* line, struct model* mesh, int* n){
