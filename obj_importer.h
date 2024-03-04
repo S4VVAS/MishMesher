@@ -6,6 +6,7 @@
 #include <string.h>
 #include <float.h>
 #include "model_mesh.h"
+#include "math_f.h"
 
 void close_file(FILE* file);
 

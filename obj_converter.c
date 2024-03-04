@@ -19,13 +19,11 @@ unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 
     
     if(node->level <= 1){
         uint8_t mask = node->is_voxels_solid;
-
         for(int i = 0; i < 8; i++){
             if((mask & 1 << i) > 0){
                 double x = offsets.x + (map[i][0] * box_size);
                 double y = offsets.y + (map[i][1] * box_size);
                 double z = offsets.z + (map[i][2] * box_size);
-
                 //Print the 8 vertices
                 fprintf(file, "v %f %f %f\nv %f %f %f\nv %f %f %f\nv %f %f %f\nv %f %f %f\nv %f %f %f\nv %f %f %f\nv %f %f %f\n",
                     x,y,z,
@@ -36,7 +34,6 @@ unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 
                     x, y-b_div_2, z-b_div_2,
                     x+b_div_2, y-b_div_2, z,
                     x+b_div_2, y-b_div_2, z-b_div_2);
-
                 //Print the 12 faces
                 fprintf(file, "f %d %d %d\n", v_offset + 1, v_offset + 3, v_offset + 2);
                 fprintf(file, "f %d %d %d\n", v_offset + 2, v_offset + 3, v_offset + 4);
@@ -61,7 +58,6 @@ unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 
         }
         return v_offset;
     }
-
     else if(node->hasChildren)
         for (int i = 0; i < 8; i++) {
             double x = offsets.x + (map[i][0] * box_size);

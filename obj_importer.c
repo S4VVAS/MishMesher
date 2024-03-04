@@ -32,8 +32,6 @@ struct model* import_mesh(char* path){
     return parse_mesh(file);
 }
 
-
-//BUG IN THE PARSE FACE 7//1 -> current cant parse propperly but can if -> 7/0/1
 void parse_face(const char* line, struct model* mesh, int* n){
     char editable_line[STRMAX];
     strcpy(editable_line, line);
@@ -71,25 +69,17 @@ void parse_vector(const char* line, struct model* mesh, int* n){
         tokens = strtok(NULL, " ");
     }
 
-    if (coordinates[0] > x_max)
-        x_max = coordinates[0];
-    if (coordinates[1] > y_max)
-        y_max = coordinates[1];
-    if (coordinates[2] > z_max)
-        z_max = coordinates[2];
+    x_max = max(x_max, coordinates[0]);
+    y_max = max(y_max, coordinates[1]);
+    z_max = max(z_max, coordinates[2]);
 
-    if (coordinates[0] < x_min)
-        x_min = coordinates[0];
-    if (coordinates[1] < y_min)
-        y_min = coordinates[1];
-    if (coordinates[2] < z_min)
-        z_min = coordinates[2];
-
+    x_min = min(x_min, coordinates[0]);
+    y_min = min(y_min, coordinates[1]);
+    z_min = min(z_min, coordinates[2]);
+    
     mesh->points[n[1]][0] = coordinates[0];
     mesh->points[n[1]][1] = coordinates[1];
     mesh->points[n[1]][2] = coordinates[2];
-
-    //printf("%f %f %f\n", coordinates[0],coordinates[1],coordinates[2]);
 }
 
 void parse_layer(struct model* mesh, int* n){
@@ -119,7 +109,6 @@ int nlayers(FILE* file){
     char buffer[STRMAX];
     char key[STRMAX];
     int n;
-    
     int layers = 0;
 
     while(fgets(buffer, STRMAX, file))
@@ -167,10 +156,8 @@ void destroy_model(struct model* mesh) {
             free(mesh->groups[i].faces[f]);
         free(mesh->groups[i].faces);
     }
-   
     for(int i = 0; i < mesh->sizes[0][1]; i++)
         free(mesh->points[i]);
-
     free(mesh->points);
     free(mesh->groups);
     free(mesh);
@@ -186,16 +173,13 @@ struct model* parse_mesh(FILE* file){
     int** nums = npoints_nfaces(file);
     struct model *mesh = alloc_model(nums);
     mesh->sizes = nums;
-
     int* curr_iter = calloc(3, sizeof(int));
-
     //Start at layer -1 as it gets incremented straight away to 0
     curr_iter[2] = -1;
 
     while(fgets(buffer, STRMAX, file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *lc = buffer + n;
-
             if (!strcmp(key, "f")){
                 parse_face(lc, mesh, curr_iter);
                 curr_iter[0]++;
