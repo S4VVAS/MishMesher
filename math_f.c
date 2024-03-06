@@ -221,7 +221,7 @@ bool triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* tri
 
     min_v = min(v0.z, min( v1.z, v2.z));
     max_v = max(v0.z, max( v1.z, v2.z));
-    if(min_v >boxhalfsize || max_v < -boxhalfsize) 
+    if(min_v > boxhalfsize || max_v < -boxhalfsize) 
         return false;
 
     if(!planeBoxOverlap(cross_p(e0, e1), v0, boxhalfsize)) 

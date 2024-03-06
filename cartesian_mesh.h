@@ -41,7 +41,7 @@ struct octree{
     //bool isLeaf;
 
     _Atomic char is_voxels_solid;
-    char level;
+    unsigned int level;
 
     bool isMallocing;
     bool hasChildren;

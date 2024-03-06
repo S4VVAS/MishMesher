@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 struct vector3{
     double x, y, z;
@@ -17,6 +18,7 @@ struct tri {
 struct material_group{
     //material index
     int material_label;
+    bool is_hollow;
 
     //face representations = [f1[x_offset, y_offset, z_offset],...]
     unsigned int **faces;

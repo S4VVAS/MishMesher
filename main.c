@@ -5,13 +5,16 @@
 #include "mesher.h"
 
 //CURRENT ARGS
-//  model-path  long_resolution  edge-buffer-size  opt:output-file-name  opt:core-count
+//model-path  material-path  long-resolution
 int main(int argc, char** argv){
-    struct model* model = import_mesh(argv[1]);
-    //struct c_mesh* c_mesh = create_c_mesh(atoi(argv[2]), model);
+    struct model* model = import_mesh(argv[1], argv[2]);
+
+    //Obj or Material File not found
+    if(model == NULL)
+        return 1;
 
     //Correct resolution if needed
-    int res = atoi(argv[2]);
+    int res = atoi(argv[3]);
     int new_res = 2;
     while(new_res < res)
         new_res *= 2;

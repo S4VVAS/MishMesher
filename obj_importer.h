@@ -10,11 +10,11 @@
 
 void close_file(FILE* file);
 
-struct model* import_mesh(char* path);
+struct model* import_mesh(char* path, char* mat_path);
 
 void destroy_model(struct model* mesh);
 //void parse_face(const char* line, struct model* mesh, int* n);
 //void parse_vector(const char* line, struct model* mesh, int* n);
 //void parse_layer(const char* line, struct model* mesh, int* n);
 
-struct model* parse_mesh(FILE* file);
+struct model* parse_mesh(FILE* file, FILE* mat_file);

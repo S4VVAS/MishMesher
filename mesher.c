@@ -39,7 +39,6 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     //For every child in the current node check for intersections
     double b_div_2 = box_size * 0.5;
     struct aabb aabbs[8];
-
     aabbs[0] = (struct aabb){box.max.x, box.max.y, box.max.z,
         box.max.x - b_div_2, box.max.y - b_div_2, box.max.z - b_div_2};
     aabbs[1] = (struct aabb){box.max.x, box.max.y, box.max.z - b_div_2, 
@@ -96,14 +95,14 @@ void mesh(int long_resolution, struct model* model){
     double model_len = len(min_model_coord,max_model_coord);
     double cell_size_domain = max(x_len, max(y_len, z_len)) / long_resolution;
 
-    printf("Each cell in the domain of the model is of size: %f from %f\n", cell_size_domain,  model_len);
+    printf("Max domain length: %f -> Final cell size: %f\n",  model_len, cell_size_domain);
     double min_size = model_len;
     unsigned int max_tree_depth = 0;
 
     while((min_size /= 2.0) >= cell_size_domain)
         max_tree_depth++;
 
-    printf("Max tree depth: %d\n", max_tree_depth);
+    printf("Octree max depth: %d\n", max_tree_depth);
     printf("Generating model containing %f cells...\n", 1.0 * long_resolution * long_resolution * long_resolution );
 
     //Malloc an octree for each layer in model
@@ -134,7 +133,6 @@ void mesh(int long_resolution, struct model* model){
             }
             //Else its a square, split into 2 separate triangles and do intersection test on each
             else{
-                printf("uwheruhweor");
                 struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v4)};
                 struct tri triangle_b = {to_vector3(v4), to_vector3(v2), to_vector3(v3)};
                 tree_intersections(box, &triangle_a, &roots[i], model_len);

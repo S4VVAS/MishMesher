@@ -16,20 +16,34 @@ void close_file(FILE* file){
         fprintf(stderr, "error: the file could not be closed\n");
 }
 
-struct model* import_mesh(char* path){
+struct model* import_mesh(char* path, char* mat_file_path){
     if (access(path, F_OK) != 0) {
         fprintf (stderr, "error: the file '%s' could not be found\n", path);
         return NULL;
     }
+    if (access(mat_file_path, F_OK) != 0) {
+        fprintf (stderr, "error: the file '%s' could not be found\n", mat_file_path);
+        return NULL;
+    }
+
     FILE* file = fopen(path, "r");
+    FILE* mat_file = fopen(mat_file_path, "r");
 
     if(!file){
         fprintf (stderr, "error: the file '%s' could not be opened\n", path);
         close_file(file);
         return NULL;
     }
-    printf("File found with given path: %s\n", path);
-    return parse_mesh(file);
+    if(!mat_file){
+        fprintf (stderr, "error: the file '%s' could not be opened\n", mat_file_path);
+        close_file(mat_file);
+        return NULL;
+    }
+
+    printf("OBJ file found with given path: %s\n", path);
+    printf("MAT file found with given path: %s\n", mat_file_path);
+
+    return parse_mesh(file, mat_file);
 }
 
 void parse_face(const char* line, struct model* mesh, int* n){
@@ -163,7 +177,29 @@ void destroy_model(struct model* mesh) {
     free(mesh);
 }
 
-struct model* parse_mesh(FILE* file){
+void parse_material_properties(FILE* mat_file, struct model* mesh){
+    char buffer[STRMAX];
+    char key[STRMAX];
+    int n;
+    int curr_layer = -1;
+
+    while(fgets(buffer, STRMAX, mat_file)){
+        if(sscanf(buffer, "%s%n", key, &n) > 0){
+            const char *line_content = buffer + n;
+            if (!strcmp(key, "l")) //l = layer
+                curr_layer++;
+            else if (!strcmp(key, "f")){ //f = fill
+                char editable_line[STRMAX];
+                strcpy(editable_line, line_content);
+                char* token = strtok(editable_line, " ");
+                mesh->groups[curr_layer].is_hollow = atoi(token);
+            }
+        }
+    }       
+    
+}
+
+struct model* parse_mesh(FILE* file, FILE* mat_file){
     char buffer[STRMAX];
     char key[STRMAX];
     int n;
@@ -202,6 +238,8 @@ struct model* parse_mesh(FILE* file){
     mesh->x_min = x_min;
     mesh->y_min = y_min;
     mesh->z_min = z_min;
+
+    parse_material_properties(mat_file, mesh);
 
     printf("finnished model parsing\n\n");
 
