@@ -8,6 +8,8 @@
 #include "obj_importer.h"
 #define STRMAX 1024
 
+unsigned int tmp = 0;
+
 int imported_number_of_layers = 0;
 double x_max = DBL_MIN, y_max = DBL_MIN, z_max = DBL_MIN, x_min = DBL_MAX, y_min = DBL_MAX, z_min = DBL_MAX;
 
@@ -70,6 +72,8 @@ void parse_face(const char* line, struct model* mesh, int* n){
         mesh->groups[n[2]].faces[n[0]][3] = 0;
     else
         mesh->groups[n[2]].faces[n[0]][3] = atoi(v4);
+
+    tmp++;
 }
 
 void parse_vector(const char* line, struct model* mesh, int* n){
@@ -132,7 +136,7 @@ int nlayers(FILE* file){
                 layers++;      
         }
     rewind(file);
-    return layers;
+    return layers == 0 ? 1 : layers;
 }
 
 int** npoints_nfaces(FILE* file){
@@ -142,23 +146,29 @@ int** npoints_nfaces(FILE* file){
     int curr_layer = -1;
 
     imported_number_of_layers = nlayers(file);
-    
+
+    //nums = [l1[], l2[]]
     int** nums = malloc(sizeof(int*) * imported_number_of_layers);
     for(int i = 0; i < imported_number_of_layers; i++)
         nums[i] = (int*) calloc(2,sizeof(int));
 
+    
     while(fgets(buffer, STRMAX, file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *line_content = buffer + n;
 
-            if (!strcmp(key, "f")) 
+            if (!strcmp(key, "f")){
+                curr_layer = curr_layer == -1 ? 0 : curr_layer;
                 nums[curr_layer][0]++;
-            else if (!strcmp(key, "v")) 
+            }    
+            else if (!strcmp(key, "v")) {
+                curr_layer = curr_layer == -1 ? 0 : curr_layer;
                 nums[0][1]++;
+            }   
             else if (!strcmp(key, "g"))
                 curr_layer++;
         }
-    }                
+    }          
 
     rewind(file);
     return nums;
@@ -196,7 +206,7 @@ void parse_material_properties(FILE* mat_file, struct model* mesh){
             }
         }
     }       
-    
+
 }
 
 struct model* parse_mesh(FILE* file, FILE* mat_file){
@@ -209,6 +219,7 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
     int** nums = npoints_nfaces(file);
     struct model *mesh = alloc_model(nums);
     mesh->sizes = nums;
+
     int* curr_iter = calloc(3, sizeof(int));
     //Start at layer -1 as it gets incremented straight away to 0
     curr_iter[2] = -1;
@@ -217,10 +228,12 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *lc = buffer + n;
             if (!strcmp(key, "f")){
+                curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
                 parse_face(lc, mesh, curr_iter);
                 curr_iter[0]++;
             }
             else if (!strcmp(key, "v")){
+                curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
                 parse_vector(lc, mesh, curr_iter);
                 curr_iter[1]++;
             }
@@ -246,5 +259,9 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
     free(curr_iter);
     close_file(file);
     mesh->n_layers = imported_number_of_layers;
+    
+    
+   
+
     return mesh;
 }

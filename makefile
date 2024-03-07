@@ -16,7 +16,7 @@ endif
 
 
 mesh: clean
-	gcc $(LINKED) main.c -o mishmesh $(OPTIONS)
+	gcc -g $(LINKED) main.c -o mishmesh $(OPTIONS)
 
 clean:
 	rm -f ./mishmesh *.o
@@ -31,3 +31,7 @@ test_simple: mesh
 	
 test_complex: mesh
 	./mishmesh "models/Seahawk.obj" "models/Seahawk.mat" 1000 0 10
+	
+test_extreme: mesh
+	./mishmesh "models/bridge.obj" "models/bridge.mat" 2000 0 10
+
