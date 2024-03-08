@@ -105,7 +105,7 @@ void parse_layer(struct model* mesh, int* n){
 }
 
 struct model* alloc_model(int** sizes){
-    struct model *mesh = (struct model*)malloc(sizeof(struct model));
+    struct model *mesh = (struct model*)calloc(1, sizeof(struct model));
     mesh->groups = (struct material_group*)malloc(imported_number_of_layers * sizeof(struct material_group));
 
     mesh->points = (double**)malloc(sizes[0][1] * sizeof(double*));
@@ -114,7 +114,6 @@ struct model* alloc_model(int** sizes){
 
     for(int i = 0; i < imported_number_of_layers; i++){
         printf("Layer %d contains: %d faces\n",i,sizes[i][0]);
-
         mesh->groups[i].faces = (unsigned int**)malloc(sizes[i][0] * sizeof(unsigned int*));
         for(int j = 0; j < sizes[i][0]; j++)
             mesh->groups[i].faces[j] = (unsigned int*)calloc(4, sizeof(unsigned int));
@@ -149,20 +148,20 @@ int** npoints_nfaces(FILE* file){
 
     //nums = [l1[], l2[]]
     int** nums = malloc(sizeof(int*) * imported_number_of_layers);
-    for(int i = 0; i < imported_number_of_layers; i++)
+    for(int i = 0; i < imported_number_of_layers; i++){
         nums[i] = (int*) calloc(2,sizeof(int));
-
+    }
     
     while(fgets(buffer, STRMAX, file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *line_content = buffer + n;
 
             if (!strcmp(key, "f")){
-                curr_layer = curr_layer == -1 ? 0 : curr_layer;
+                //curr_layer = curr_layer == -1 ? 0 : curr_layer;
                 nums[curr_layer][0]++;
             }    
             else if (!strcmp(key, "v")) {
-                curr_layer = curr_layer == -1 ? 0 : curr_layer;
+                //curr_layer = curr_layer == -1 ? 0 : curr_layer;
                 nums[0][1]++;
             }   
             else if (!strcmp(key, "g"))
@@ -228,12 +227,12 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *lc = buffer + n;
             if (!strcmp(key, "f")){
-                curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
+                //curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
                 parse_face(lc, mesh, curr_iter);
                 curr_iter[0]++;
             }
             else if (!strcmp(key, "v")){
-                curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
+                //curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
                 parse_vector(lc, mesh, curr_iter);
                 curr_iter[1]++;
             }

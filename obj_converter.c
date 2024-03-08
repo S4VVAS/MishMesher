@@ -16,7 +16,7 @@ double map[8][3] = {
 //ptof = print to object file
 unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 offsets, double box_size, unsigned int v_offset){
     double b_div_2 = box_size * 0.5;
-    
+
     if(node->level <= 1){
         uint8_t mask = node->is_voxels_solid;
         for(int i = 0; i < 8; i++){
@@ -63,7 +63,7 @@ unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 
             double x = offsets.x + (map[i][0] * box_size);
             double y = offsets.y + (map[i][1] * box_size);
             double z = offsets.z + (map[i][2] * box_size);
-            
+            //printf("LVL %d ---CH--- %d %d %d %d %d %d %d %d\n", node->level, &node->children[0] == NULL,&node->children[1] == NULL,&node->children[2] == NULL,&node->children[3] == NULL,&node->children[4] == NULL,&node->children[5] == NULL,&node->children[6] == NULL,&node->children[7] == NULL);
             v_offset = traverse_tree_ptof(&node->children[i], file, (struct vector3){x, y, z}, b_div_2, v_offset);
         }
 

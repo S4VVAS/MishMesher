@@ -8,8 +8,6 @@ OPTIONS:=
 
 ifeq ($(OS),Darwin)
 	OPTIONS += -framework OpenCL
-else
-	OPTIONS += -l OpenCL
 endif
 
 
@@ -30,7 +28,7 @@ test_simple: mesh
 	./mishmesh "models/square.obj" "models/square.mat" 60 0 10
 	
 test_complex: mesh
-	./mishmesh "models/Seahawk.obj" "models/Seahawk.mat" 1000 0 10
+	./mishmesh "models/Seahawk.obj" "models/Seahawk.mat" 500 0 10
 	
 test_extreme: mesh
 	./mishmesh "models/bridge.obj" "models/bridge.mat" 2000 0 10

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h> 
+#include <stdint.h> 
 /*
 struct c_mesh{
     unsigned int size;
@@ -40,7 +41,7 @@ struct cc_mesh{
 struct octree{
     //bool isLeaf;
 
-    _Atomic char is_voxels_solid;
+    uint8_t is_voxels_solid;
     unsigned int level;
 
     bool isMallocing;

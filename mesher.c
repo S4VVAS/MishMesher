@@ -1,4 +1,4 @@
-#include "mesher.h"
+ #include "mesher.h"
 
 #if __STDC_VERSION__ < 201112L || __STDC_NO_ATOMICS__ == 1
 #error "ATOMICS NOT SUPPORTED! CAN'T COMPILE"
@@ -9,22 +9,28 @@ bool atomic_set(struct octree *node, int solid_child){
 }
 
 void malloc_children(struct octree *node){
-    if(__sync_bool_compare_and_swap(&node->isMallocing, false, true)){
+    //if(__sync_bool_compare_and_swap(&node->isMallocing, false, true)){
         //We got the lock
        // printf("Thread #%d is mallocing children\n", 0);
         node->children = (struct octree*)malloc(sizeof(struct octree) * 8);
-        for(int i = 0; i < 8; i++)
+        for(int i = 0; i < 8; i++){
             node->children[i].level = node->level - 1;
+            node->children[i].hasChildren = false;
+            node->children[i].isMallocing = false;
+            node->children[i].is_voxels_solid = 0;
+            node->children[i].children = NULL;
+        }
+           
         node->hasChildren = true;
-        node->isMallocing = false;
-        return;
-    }
-    while(__sync_bool_compare_and_swap(&node->isMallocing, false, false)){
+        node->is_voxels_solid = 0;
+        //node->isMallocing = false;
+   // }
+   // while(__sync_bool_compare_and_swap(&node->isMallocing, false, false)){
         //printf("Thread #%d is waiting for children malloc\n", 0);
         //Spinlock, wait untill children have been malloced by other thread
         //Prone to deadlocks
-    }
-    return;
+    //}
+   // return;
   
 }
 
@@ -64,9 +70,10 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     if(node->level <= 1){
         uint8_t mask = 0; // 00000000
         for(int i = 0; i < 8; i++){
-            if(intersects(&aabbs[i], triangle, b_div_2))
+            if(intersects(&aabbs[i], triangle, b_div_2)){
                 //Shift by i to set correct child
                 mask = mask | 1 << i;
+            }
         }
         node->is_voxels_solid = node->is_voxels_solid | mask;
         return;
@@ -108,6 +115,7 @@ void mesh(int long_resolution, struct model* model){
     //Malloc an octree for each layer in model
     struct octree* roots = (struct octree*)malloc(sizeof(struct octree) * model->n_layers);
     printf("Blocking faces in Layer:\n");
+
     //for each material/layer
     for(int i = 0; i < model->n_layers; i++){
         printf("%d..\n", i);
