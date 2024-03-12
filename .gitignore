@@ -7,6 +7,9 @@
 *.obj
 *.elf
 
+# Custom files
+*.mat
+
 # Linker output
 *.ilk
 *.map

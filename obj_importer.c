@@ -104,7 +104,7 @@ void parse_layer(struct model* mesh, int* n){
     mesh->groups[n[2]].material_label = n[2];
 }
 
-struct model* alloc_model(int** sizes){
+struct model* alloc_model(unsigned int** sizes){
     struct model *mesh = (struct model*)calloc(1, sizeof(struct model));
     mesh->groups = (struct material_group*)malloc(imported_number_of_layers * sizeof(struct material_group));
 
@@ -122,7 +122,7 @@ struct model* alloc_model(int** sizes){
     return mesh;
 }
 
-int nlayers(FILE* file){
+unsigned int nlayers(FILE* file){
     char buffer[STRMAX];
     char key[STRMAX];
     int n;
@@ -138,7 +138,7 @@ int nlayers(FILE* file){
     return layers == 0 ? 1 : layers;
 }
 
-int** npoints_nfaces(FILE* file){
+unsigned int** npoints_nfaces(FILE* file){
     char buffer[STRMAX];
     char key[STRMAX];
     int n;
@@ -147,9 +147,9 @@ int** npoints_nfaces(FILE* file){
     imported_number_of_layers = nlayers(file);
 
     //nums = [l1[], l2[]]
-    int** nums = malloc(sizeof(int*) * imported_number_of_layers);
+    unsigned int** nums = malloc(sizeof(unsigned int*) * imported_number_of_layers);
     for(int i = 0; i < imported_number_of_layers; i++){
-        nums[i] = (int*) calloc(2,sizeof(int));
+        nums[i] = (unsigned int*) calloc(2,sizeof(unsigned int));
     }
     
     while(fgets(buffer, STRMAX, file)){
@@ -191,7 +191,7 @@ void parse_material_properties(FILE* mat_file, struct model* mesh){
     char key[STRMAX];
     int n;
     int curr_layer = -1;
-
+    printf("\n");
     while(fgets(buffer, STRMAX, mat_file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *line_content = buffer + n;
@@ -202,6 +202,7 @@ void parse_material_properties(FILE* mat_file, struct model* mesh){
                 strcpy(editable_line, line_content);
                 char* token = strtok(editable_line, " ");
                 mesh->groups[curr_layer].is_hollow = atoi(token);
+                printf("Layer %d will %s\n", curr_layer, mesh->groups[curr_layer].is_hollow ? "be hollow" : "be filled");
             }
         }
     }       
@@ -213,9 +214,9 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
     char key[STRMAX];
     int n;
 
-    printf("parsing mesh...\n");
+    printf("Parsing mesh...\n");
 
-    int** nums = npoints_nfaces(file);
+    unsigned int** nums = npoints_nfaces(file);
     struct model *mesh = alloc_model(nums);
     mesh->sizes = nums;
 
@@ -253,7 +254,7 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
 
     parse_material_properties(mat_file, mesh);
 
-    printf("finnished model parsing\n\n");
+    printf("Model parsing -> Completed\n\n");
 
     free(curr_iter);
     close_file(file);

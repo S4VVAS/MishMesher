@@ -17,8 +17,8 @@ struct tri {
 
 struct material_group{
     //material index
-    int material_label;
-    bool is_hollow;
+    unsigned int material_label;
+    unsigned int is_hollow;
 
     //face representations = [f1[x_offset, y_offset, z_offset],...]
     unsigned int **faces;
@@ -30,7 +30,7 @@ struct model{
     //layer sizes = [L1[n_points, n_faces], L2[n_points, n_faces],...]
     double x_max, y_max, z_max, x_min, y_min, z_min;
     double **points;
-    int n_layers;
-    int** sizes;
+    unsigned int n_layers;
+    unsigned int** sizes;
     struct material_group *groups;
 };

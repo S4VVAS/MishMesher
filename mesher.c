@@ -4,20 +4,17 @@
 #error "ATOMICS NOT SUPPORTED! CAN'T COMPILE"
 #endif
 
-bool atomic_set(struct octree *node, int solid_child){
-    return 0;
-}
-
 void malloc_children(struct octree *node){
     //if(__sync_bool_compare_and_swap(&node->isMallocing, false, true)){
         //We got the lock
        // printf("Thread #%d is mallocing children\n", 0);
         node->children = (struct octree*)malloc(sizeof(struct octree) * 8);
         for(int i = 0; i < 8; i++){
-            node->children[i].level = node->level - 1;
-            node->children[i].hasChildren = false;
-            node->children[i].isMallocing = false;
             node->children[i].is_voxels_solid = 0;
+            node->children[i].level = node->level - 1;
+            node->children[i].isMallocing = false;
+            node->children[i].hasChildren = false;
+            node->children[i].is_inside = true;
             node->children[i].children = NULL;
         }
            
@@ -89,6 +86,38 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     }
 }
 
+//Bool is_inside
+void fill_model(struct octree* node){
+    //Check outsiders
+    if(node->hasChildren){
+        //we loop through child-less first to paint all certainly outside nodes
+        for(int i = 0; i < 8; i++){
+            //If no children and not leaf level
+            if(!node->children[i].hasChildren && node->children[i].level > 1){
+                node->children[i].is_inside = false;
+            }
+        }
+        //Then we loop through children to paint neigbours as outside so that
+        //  no inside blocks are painted by accident.
+        //All child nodes that are painted need to "touch" a node thats marked
+        //  as outside
+        //As we have looped through all child-less nodes, we now know all the
+        //  outside nodes that are touching the children outside nodes.
+        for(int i = 0; i < 8; i++){
+            if(node->children[i].hasChildren){
+                //if the node has children we check those children to set the outside property
+                for(int j = 0; j < 8; j++){
+                  // if(node->children[i].children[j]){
+                        node->children[i].children[j].is_inside = false;
+                   // }
+                 }
+            }
+        }
+
+    }
+
+    
+}
 
 
 
@@ -149,27 +178,14 @@ void mesh(int long_resolution, struct model* model){
             
         }
 
+        
+        if(model->groups[i].is_hollow == 1)
+            fill_model(&roots[i]);
+        //else if(model->groups[i].is_hollow == 2)
+            //adaptive_fill_model(&roots[i]);
+
         char path[256];
         sprintf(path, "obj_converted/%d.obj", i);
-
-        /*
-        struct octree tmp = {0, 4, false, true};
-        malloc_children(&tmp);
-
-        malloc_children(&tmp.children[0]);
-        malloc_children(&tmp.children[7]);
-
-        malloc_children(&tmp.children[0].children[0]);
-        malloc_children(&tmp.children[7].children[7]);
-
-        tmp.children[0].children[0].children[0].is_voxels_solid = 105;
-        tmp.children[7].children[7].children[7].is_voxels_solid = 105;
-        
-        obj_convert(&tmp, path, model_long_side);
-
-        free(tmp.children);
-        */
-
         obj_convert(&roots[i], path, model_len);
     }
 

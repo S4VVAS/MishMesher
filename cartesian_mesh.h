@@ -46,6 +46,8 @@ struct octree{
 
     bool isMallocing;
     bool hasChildren;
+    //Used for layer fill -> classifies node as outside or inside
+    bool is_inside;
 
     //Used to eaily calculate size of blocks
 
