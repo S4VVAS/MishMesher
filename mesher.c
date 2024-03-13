@@ -114,11 +114,26 @@ int dir_of_parent_cells[8][3] = {
     {5,2,0}
 };
 
+int mirrored_traverse[6][8] = {
+    {4,5,6,7,0,1,2,3}, //Up
+    {4,5,6,7,0,1,2,3}, //Down
+    {2,3,0,1,6,7,4,5}, //Right
+    {1,0,3,2,5,4,7,6}, //Back
+    {2,3,0,1,6,7,4,5}, //Left
+    {1,0,3,2,5,4,7,6} //Front
+};
 
+bool is_neighbour_filled(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth], unsigned int dir_from){
+    for(int i = 0; i < 6; i++)
+        printf("%d ",dir_check[i]);
+    printf("\n%d \n", dir_from);
+    
+    if(!node->is_inside)
+        return true;
+    if(!node->hasChildren)
+        return false;
 
-bool is_child_neighbour(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth]){
-
-
+    return is_neighbour_filled(&node->children[mirrored_traverse[dir_from][path[node->level]]], dir_check, path, dir_from);
 }
 
 bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth]){
@@ -130,7 +145,7 @@ bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int pa
     //  parents children to find the actuall neighbour of the child
     
     //We add the path of the child to the path array
-    path[node->level-1] = node->where_in_parent;
+    path[(node->level)-1] = node->where_in_parent;
     struct octree* parent = node->parent;
     for(int i = 0; i < 3; i++){
         //if the node direction has not been visited, check if filled
@@ -142,12 +157,8 @@ bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int pa
                 return true;
 
             struct octree c_node = parent->children[neighbouring_cells[node->where_in_parent][i]];
-            if(!c_node.is_inside)
+            if(is_neighbour_filled(&c_node, dir_check, path, node->where_in_parent))
                 return true;
-            else{
-                //start traversing into the parents children
-
-            }
             //Dir not inside, mark that direction has been checked
             dir_check[dir_of_parent_cells[node->where_in_parent][i]] = true;
         }
@@ -156,6 +167,7 @@ bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int pa
     // where missing directions are able to be checked
     return has_filled_neigbour(parent, dir_check, path);
 }
+
 
 
 
