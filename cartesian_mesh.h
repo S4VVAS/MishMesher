@@ -39,10 +39,9 @@ struct cc_mesh{
 */
 
 struct octree{
-    //bool isLeaf;
-
     uint8_t is_voxels_solid;
     unsigned int level;
+    char where_in_parent;
 
     bool isMallocing;
     bool hasChildren;
@@ -52,4 +51,5 @@ struct octree{
     //Used to eaily calculate size of blocks
 
     struct octree *children;
+    struct octree *parent;
 };

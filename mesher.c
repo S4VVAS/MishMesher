@@ -4,6 +4,9 @@
 #error "ATOMICS NOT SUPPORTED! CAN'T COMPILE"
 #endif
 
+unsigned int max_tree_depth;
+
+
 void malloc_children(struct octree *node){
     //if(__sync_bool_compare_and_swap(&node->isMallocing, false, true)){
         //We got the lock
@@ -12,12 +15,13 @@ void malloc_children(struct octree *node){
         for(int i = 0; i < 8; i++){
             node->children[i].is_voxels_solid = 0;
             node->children[i].level = node->level - 1;
+            node->children[i].where_in_parent = i;
             node->children[i].isMallocing = false;
             node->children[i].hasChildren = false;
             node->children[i].is_inside = true;
             node->children[i].children = NULL;
+            node->children[i].parent = node;
         }
-           
         node->hasChildren = true;
         node->is_voxels_solid = 0;
         //node->isMallocing = false;
@@ -86,38 +90,103 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     }
 }
 
+unsigned int neighbouring_cells[8][3] = {
+    {2,1,4},
+    {0,3,5},
+    {3,0,6},
+    {1,2,7},
+
+    {5,6,0},
+    {7,4,1},
+    {4,7,2},
+    {6,5,3}
+};
+
+int dir_of_parent_cells[8][3] = {
+    {4,3,1},
+    {5,4,1},
+    {3,2,1},
+    {2,5,1},
+
+    {3,4,0},
+    {4,5,0},
+    {2,3,0},
+    {5,2,0}
+};
+
+
+
+bool is_child_neighbour(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth]){
+
+
+}
+
+bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth]){
+    //Traverse upp to find a neighbour, as soon as its found return true
+    //if we reach top level node and nothing, return false
+    //If a side has been checked set to true, or false, decide later, and then dont check that side again
+
+    //keep track of path from child, so that we can mirror traverse into negbouring 
+    //  parents children to find the actuall neighbour of the child
+    
+    //We add the path of the child to the path array
+    path[node->level-1] = node->where_in_parent;
+    struct octree* parent = node->parent;
+    for(int i = 0; i < 3; i++){
+        //if the node direction has not been visited, check if filled
+        if( dir_check[dir_of_parent_cells[node->where_in_parent][i]] == false){
+            //if the direction hasnt been checked and the parent NULL, meaning 
+            //  the current node is the parent, then the cell's neighbour has 
+            //  to be the edge, which is not inside
+            if(parent == NULL)
+                return true;
+
+            struct octree c_node = parent->children[neighbouring_cells[node->where_in_parent][i]];
+            if(!c_node.is_inside)
+                return true;
+            else{
+                //start traversing into the parents children
+
+            }
+            //Dir not inside, mark that direction has been checked
+            dir_check[dir_of_parent_cells[node->where_in_parent][i]] = true;
+        }
+    }
+    //if all directions within the parent have been checked, continue untill we reach a node
+    // where missing directions are able to be checked
+    return has_filled_neigbour(parent, dir_check, path);
+}
+
+
+
 //Bool is_inside
 void fill_model(struct octree* node){
-    //Check outsiders
-    if(node->hasChildren){
-        //we loop through child-less first to paint all certainly outside nodes
-        for(int i = 0; i < 8; i++){
-            //If no children and not leaf level
-            if(!node->children[i].hasChildren && node->children[i].level > 1){
-                node->children[i].is_inside = false;
-            }
-        }
-        //Then we loop through children to paint neigbours as outside so that
-        //  no inside blocks are painted by accident.
-        //All child nodes that are painted need to "touch" a node thats marked
-        //  as outside
-        //As we have looped through all child-less nodes, we now know all the
-        //  outside nodes that are touching the children outside nodes.
-        for(int i = 0; i < 8; i++){
-            if(node->children[i].hasChildren){
-                //if the node has children we check those children to set the outside property
-                for(int j = 0; j < 8; j++){
-                  // if(node->children[i].children[j]){
-                        node->children[i].children[j].is_inside = false;
-                   // }
-                 }
-            }
-        }
+    //if the node has children, go to children
+    if(node->level <= 1){
 
     }
-
-    
+    else if(!node->hasChildren){
+        bool dir_check[6] = {false};
+        unsigned int path[max_tree_depth];
+        if(has_filled_neigbour(node, dir_check, path))
+            node->is_inside = false;
+    }
+    else if(node->hasChildren){
+        for(int i = 0; i < 8; i++)
+            if(!node->children[i].hasChildren){
+                bool dir_check[6] = {false};
+                unsigned int path[max_tree_depth];
+                if(has_filled_neigbour(&node->children[i], dir_check, path))
+                    node->children[i].is_inside = false;
+            }
+        for(int i = 0; i < 8; i++)
+            if(node->children[i].hasChildren)
+                fill_model(&node->children[i]);
+    }
+    //If the node has no children, then we should mark it
+        //so we call has_filled_neigbour to know if we should mark it
 }
+
 
 
 
@@ -133,7 +202,7 @@ void mesh(int long_resolution, struct model* model){
 
     printf("Max domain length: %f -> Final cell size: %f\n",  model_len, cell_size_domain);
     double min_size = model_len;
-    unsigned int max_tree_depth = 0;
+    max_tree_depth = 0;
 
     while((min_size /= 2.0) >= cell_size_domain)
         max_tree_depth++;
