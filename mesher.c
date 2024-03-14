@@ -123,17 +123,21 @@ int mirrored_traverse[6][8] = {
     {1,0,3,2,5,4,7,6} //Front
 };
 
-bool is_neighbour_filled(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth], unsigned int dir_from){
+bool is_neighbour_filled(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth], unsigned int dir_from){    
+   
+    
+    printf("lvl -> %d\n", node->level);
     for(int i = 0; i < 6; i++)
         printf("%d ",dir_check[i]);
-    printf("\n%d \n", dir_from);
+    printf("\ndir %d -> %d to %d \n", dir_from, path[node->level-1], mirrored_traverse[dir_from][path[node->level-1]]);
     
+
     if(!node->is_inside)
         return true;
     if(!node->hasChildren)
         return false;
 
-    return is_neighbour_filled(&node->children[mirrored_traverse[dir_from][path[node->level]]], dir_check, path, dir_from);
+    return is_neighbour_filled(&node->children[mirrored_traverse[dir_from][path[node->level-1]]], dir_check, path, dir_from);
 }
 
 bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int path[max_tree_depth]){
@@ -143,24 +147,30 @@ bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int pa
 
     //keep track of path from child, so that we can mirror traverse into negbouring 
     //  parents children to find the actuall neighbour of the child
-    
+    printf("\n\n--------------PARENT JUMP--------------\n");
     //We add the path of the child to the path array
+    
+
+    //if the parent in the current node is NULL, meaning 
+    //  the current node is the parent, then the cell's neighbour has 
+    //  to be the edge, which is not inside
+    if(node->parent == NULL)
+        return true;
+
     path[(node->level)-1] = node->where_in_parent;
     struct octree* parent = node->parent;
+
     for(int i = 0; i < 3; i++){
+        printf("\n\nNE>W\n");
+        
+
         //if the node direction has not been visited, check if filled
         if( dir_check[dir_of_parent_cells[node->where_in_parent][i]] == false){
-            //if the direction hasnt been checked and the parent NULL, meaning 
-            //  the current node is the parent, then the cell's neighbour has 
-            //  to be the edge, which is not inside
-            if(parent == NULL)
-                return true;
-
+            dir_check[dir_of_parent_cells[node->where_in_parent][i]] = true;
             struct octree c_node = parent->children[neighbouring_cells[node->where_in_parent][i]];
             if(is_neighbour_filled(&c_node, dir_check, path, node->where_in_parent))
                 return true;
             //Dir not inside, mark that direction has been checked
-            dir_check[dir_of_parent_cells[node->where_in_parent][i]] = true;
         }
     }
     //if all directions within the parent have been checked, continue untill we reach a node
@@ -173,6 +183,8 @@ bool has_filled_neigbour(struct octree* node, bool dir_check[6], unsigned int pa
 
 //Bool is_inside
 void fill_model(struct octree* node){
+    printf("\n\n||||||||||||||||||NEW NODE|||||||||||||||||||\n");
+
     //if the node has children, go to children
     if(node->level <= 1){
 
@@ -232,6 +244,7 @@ void mesh(int long_resolution, struct model* model){
         //Malloc octree root children and set level
         roots[i].level = max_tree_depth;
         malloc_children(&roots[i]);
+
         //for each face
         //#omp parallel for
         for(int f = 0; f < model->sizes[i][0]; f++){
