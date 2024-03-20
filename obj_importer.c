@@ -202,7 +202,7 @@ void parse_material_properties(FILE* mat_file, struct model* mesh){
                 strcpy(editable_line, line_content);
                 char* token = strtok(editable_line, " ");
                 mesh->groups[curr_layer].is_hollow = atoi(token);
-                printf("Layer %d will %s\n", curr_layer, mesh->groups[curr_layer].is_hollow ? "be hollow" : "be filled");
+                printf("Layer %d will %s\n", curr_layer, mesh->groups[curr_layer].is_hollow ? "be filled" : "be hollow");
             }
         }
     }       

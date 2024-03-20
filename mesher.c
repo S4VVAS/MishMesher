@@ -245,6 +245,7 @@ void fill_leafs(struct octree* node){
 
 void fill_node(struct octree* node){
     if(node->level <= 1){
+        //CHANGE THIS VALUE!!!!!!
         node->is_voxels_solid = 255;
     }
     else{
@@ -255,7 +256,7 @@ void fill_node(struct octree* node){
 }
 
 void fill_voids(struct octree* node){
-    if(!node->hasChildren && node->is_inside){
+    if(node->level > 1 && !node->hasChildren && node->is_inside){
         fill_node(node);
     }
     else if(node->hasChildren)
@@ -351,9 +352,6 @@ unsigned int deep_child_cells_in_dir[6][4] = {
 bool has_deeper_empty_neigbour(struct octree* node, int dir_to){
     if(!node->hasChildren){
         if(node->level <= 1){
-            for(int i = 0; i < 4; i++)
-                if((node->is_voxels_solid & 1 << deep_child_cells_in_dir[mirrored_dir[dir_to]][i]) == 0)
-                    return true;
             return false;
         }
         if(node->is_inside)
@@ -362,7 +360,8 @@ bool has_deeper_empty_neigbour(struct octree* node, int dir_to){
     }
     if(node->hasChildren)
         for(int i = 0; i < 4; i++)
-            return has_deeper_empty_neigbour(&node->children[deep_child_cells_in_dir[dir_to][i]], dir_to);
+            if(has_deeper_empty_neigbour(&node->children[deep_child_cells_in_dir[dir_to][i]], dir_to))
+                return true;
     return false;
 }
 
@@ -384,12 +383,12 @@ bool has_empty_neigbour_trav_down(struct octree* node, int path[max_tree_depth],
 }
 
 bool has_empty_neigbour_trav_up(struct octree* node, bool dir_check[6], int path[max_tree_depth], int p_depth){
+    if(node == NULL)
+        return true;
 
     //Selected node in parent
-    int p = path[node->level - 1];
-
-    if(node == NULL)
-        return false;
+    int p = path[node->level];
+    //printf("%d ", p);
     if(node->level == max_tree_depth){
         //We have reached root
         //Check when dir  = false, goes outside, if it does, return true, else false
@@ -419,15 +418,16 @@ bool has_empty_neigbour_trav_up(struct octree* node, bool dir_check[6], int path
     return has_empty_neigbour_trav_up(node->parent, dir_check, path, p_depth);
 }
 
+//Finds target node
 void fill_model_v2(struct octree* node, unsigned int s_order[8], int path[max_tree_depth]){
-    if(!node->hasChildren){
-        bool dir_check[6] = {false};
-        if(has_empty_neigbour_trav_up(node->parent, dir_check, path, node->level))
+    if(!node->hasChildren && node->level > 1){
+        bool dir_check[6] = {false,false,false,false,false,false};
+        if(has_empty_neigbour_trav_up(node->parent, dir_check, path, node->level)) //PARENT?
             node->is_inside = false;
     }
     else if(node->hasChildren){
         for(int i = 0; i < 8; i++){
-            path[node->level - 1] = s_order[i];
+            path[node->level] = s_order[i];
             fill_model_v2(&node->children[s_order[i]], s_order, path);
         }
     }
@@ -435,21 +435,18 @@ void fill_model_v2(struct octree* node, unsigned int s_order[8], int path[max_tr
 
 void fill_the_model(struct octree* root){
     //root has to have children
-    
+        printf("wefwef");
+
     if(!root->hasChildren)
         return;
     for(int i = 0; i < 8; i++){
-        int path[max_tree_depth];
+        int path[max_tree_depth + 1];
         //Set first path to the child that is entered
-        path[root->level - 1] = i;
+        path[root->level] = i;
+        printf("%d %d\n", root->level, max_tree_depth);
         fill_model_v2(&root->children[i], search_order[i], path);
     }
 }
-
-
-
-
-
 
 
 
