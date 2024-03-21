@@ -20,7 +20,7 @@ unsigned int traverse_tree_ptof(struct octree* node, FILE* file, struct vector3 
     if(node->level <= 1){
         uint8_t mask = node->is_voxels_solid;
         for(int i = 0; i < 8; i++){
-            if((mask & 1 << i) > 0){
+            if((mask & 1 << i)){
                 double x = offsets.x + (map[i][0] * box_size);
                 double y = offsets.y + (map[i][1] * box_size);
                 double z = offsets.z + (map[i][2] * box_size);

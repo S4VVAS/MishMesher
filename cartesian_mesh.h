@@ -50,6 +50,14 @@ struct octree{
 
     //Used to eaily calculate size of blocks
 
-    struct octree *children;
-    struct octree *parent;
+    struct octree* neighbours[6];
+
+    struct octree* children;
+    struct octree* parent;
+};
+
+struct cell{
+    uint8_t is_voxels_solid; 
+    bool is_inside;
+    struct cell* neighbours[6];
 };

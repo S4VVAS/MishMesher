@@ -4,6 +4,29 @@
 #error "ATOMICS NOT SUPPORTED! CAN'T COMPILE"
 #endif
 
+/*
+----INFO ABOUT CELL PLACEMENT AND DIRECTIONS----
+ _____   _____
+|3  1|  |7  5|
+|2__0|  |6__4|
+ TOP    BOTTOM
+
+            (t)
+             0
+             | 
+             |  __ 2 (bk)
+             |/
+ (l) 5 - - -[#]- - - 3 (r)
+           / |
+ (fr) 3 __/  |
+             |
+             1
+            (b)
+*/
+
+
+
+
 unsigned int max_tree_depth;
 
 
@@ -68,14 +91,17 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
 
     //If tree is lowest level, look at char leafs
     //Level <= 1 as the last level is the leaf nodes
+    printf("new child\n");
     if(node->level <= 1){
         uint8_t mask = 0; // 00000000
         for(int i = 0; i < 8; i++){
             if(intersects(&aabbs[i], triangle, b_div_2)){
                 //Shift by i to set correct child
                 mask = mask | 1 << i;
+                printf("b ");
             }
         }
+        printf("\n");
         node->is_voxels_solid = node->is_voxels_solid | mask;
         return;
     }
@@ -95,17 +121,7 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
 /*
 
 
-unsigned int dir_of_parent_cells[8][3] = {
-    {4,3,1},
-    {5,4,1},
-    {3,2,1},
-    {2,5,1},
 
-    {3,4,0},
-    {4,5,0},
-    {2,3,0},
-    {5,2,0}
-};
 
 
 
@@ -288,16 +304,18 @@ unsigned int search_order[8][8] = {
     {7, 6,5,3, 2,1,4, 0}
 };
 
-unsigned int mirrored_traverse[6][8] = {
-    {4,5,6,7,0,1,2,3}, //Up
-    {4,5,6,7,0,1,2,3}, //Down
-
-    {1,0,3,2,5,4,7,6}, //Back
-    {1,0,3,2,5,4,7,6}, //Front
-
-    {2,3,0,1,6,7,4,5}, //Right
-    {2,3,0,1,6,7,4,5}  //Left
+unsigned int rev_search_order[8][8] = {
+    {7, 6,5,3, 2,1,4, 0},
+    {6, 7,4,2, 3,0,5, 1},
+    {5, 7,4,1, 0,3,6, 2},
+    {4, 6,5,0, 2,1,7, 3},
+    {3, 1,2,7, 0,6,5, 4},
+    {2, 3,0,6, 7,4,1, 5}, 
+    {1, 3,0,5, 2,7,4, 6},
+    {0, 1,2,4, 5,6,3, 7}
 };
+
+
 
 unsigned int neighbouring_cells[8][3] = {
     {2,1,4},
@@ -335,26 +353,14 @@ unsigned int dir_outside_root_lvl[8][3] = {
     {5,2,1}
 };
 
-int mirrored_dir[6] = {1,0,3,2,5,4};
-
-unsigned int deep_child_cells_in_dir[6][4] = {
-    {0,1,2,3},
-    {4,5,6,7},
-    {3,1,5,7},
-    {2,0,6,4},
-    {0,1,4,5},
-    {2,3,6,7}
-};
 
 
+/*
 
 
 bool has_deeper_empty_neigbour(struct octree* node, int dir_to){
     if(!node->hasChildren){
-        if(node->level <= 1){
-            return false;
-        }
-        if(node->is_inside)
+        if(node->level <= 1 || node->is_inside)
             return false;
         return true;
     }
@@ -367,13 +373,7 @@ bool has_deeper_empty_neigbour(struct octree* node, int dir_to){
 
 bool has_empty_neigbour_trav_down(struct octree* node, int path[max_tree_depth], int dir, int p_depth){
     if(!node->hasChildren){
-        if(node->level <= 1){
-            for(int i = 0; i < 4; i++)
-                if((node->is_voxels_solid & 1 << deep_child_cells_in_dir[mirrored_dir[dir]][i]) == 0)
-                    return true;
-            return false;
-        }
-        if(node->is_inside)
+        if(node->level <= 1 || node->is_inside)
             return false;
         return true;
     }
@@ -400,21 +400,20 @@ bool has_empty_neigbour_trav_up(struct octree* node, bool dir_check[6], int path
     }
     //Were at or bellow the child right before root level
     
-        for(int i = 0; i < 3; i++){
-            //Go through neighbours that dont have visited directions
-            if(!dir_check[dir_neighbouring_cells[p][i]]){
-                //Mark direction as visited
-                dir_check[dir_neighbouring_cells[p][i]] = true;
-                //If the neighbouring node has children, check them to see if they are marked as empty, 
-                //if they are, return true
-                if(!node->children[neighbouring_cells[p][i]].hasChildren && !node->children[neighbouring_cells[p][i]].is_inside)
-                    return true;
-                if(node->children[neighbouring_cells[p][i]].hasChildren && has_empty_neigbour_trav_down(&node->children[neighbouring_cells[p][i]], path, dir_neighbouring_cells[p][i], p_depth))
-                    return true;
-            }  
-        }
-    
-    
+    for(int i = 0; i < 3; i++){
+        //Go through neighbours that dont have visited directions
+        if(!dir_check[dir_neighbouring_cells[p][i]]){
+            //Mark direction as visited
+            dir_check[dir_neighbouring_cells[p][i]] = true;
+            //If the neighbouring node has children, check them to see if they are marked as empty, 
+            //if they are, return true
+            if(!node->children[neighbouring_cells[p][i]].hasChildren && !node->children[neighbouring_cells[p][i]].is_inside)
+                return true;
+            if(node->children[neighbouring_cells[p][i]].hasChildren && has_empty_neigbour_trav_down(&node->children[neighbouring_cells[p][i]], path, dir_neighbouring_cells[p][i], p_depth))
+                return true;
+        }  
+    }
+
     return has_empty_neigbour_trav_up(node->parent, dir_check, path, p_depth);
 }
 
@@ -446,6 +445,193 @@ void fill_the_model(struct octree* root){
         printf("%d %d\n", root->level, max_tree_depth);
         fill_model_v2(&root->children[i], search_order[i], path);
     }
+
+    for(int i = 0; i < 8; i++){
+        int path[max_tree_depth + 1];
+        //Set first path to the child that is entered
+        path[root->level] = i;
+        printf("%d %d\n", root->level, max_tree_depth);
+        fill_model_v2(&root->children[i], rev_search_order[i], path);
+    }
+}
+
+*/
+
+
+
+
+
+
+
+int mirrored_dir[6] = {1,0,3,2,5,4};
+
+unsigned int deep_child_cells_in_dir[6][4] = {
+    {0,1,2,3},
+    {4,5,6,7},
+    {3,1,5,7},
+    {2,0,6,4},
+    {0,1,4,5},
+    {2,3,6,7}
+};
+
+int neighbour_directions[8][6] = {
+{-1, 4, 1, -1, -1, 2},
+{-1, 5, -1, 0, -1, 3},
+{-1, 6, 3, -1, 0, -1},
+{-1, 7, -1, 2, 1, -1},
+
+{0, -1, 5, -1, -1, 6},
+{1, -1, -1, 4, -1, 7},
+{2, -1, 7, -1, 4, -1},
+{3, -1, -1, 6, 5, -1}
+};
+
+unsigned int mirrored_traverse[6][8] = {
+    {4,5,6,7,0,1,2,3}, //Up
+    {4,5,6,7,0,1,2,3}, //Down
+
+    {1,0,3,2,5,4,7,6}, //Back
+    {1,0,3,2,5,4,7,6}, //Front
+
+    {2,3,0,1,6,7,4,5}, //Right
+    {2,3,0,1,6,7,4,5}  //Left
+};
+
+struct octree* get_neighbour_trav_down_deep(struct octree* node, int dir_to){
+    if(node->hasChildren)
+        for(int i = 0; i < 4; i++)
+            return get_neighbour_trav_down_deep(&node->children[deep_child_cells_in_dir[mirrored_dir[dir_to]][i]], dir_to);
+    return node;
+}
+
+struct octree* get_neighbour_trav_down(struct octree* node, int path[max_tree_depth], int dir_to, int max_path_depth){
+    
+    if(node->hasChildren){
+        if(node->level < max_path_depth){
+            //We have reached the end of the path that the original node was at
+            //return get_neighbour_trav_down_deep(node, dir_to);
+        }
+        return get_neighbour_trav_down(
+            &node->children[mirrored_traverse[dir_to][path[node->level - 1]]], 
+            path, dir_to, max_path_depth);
+    }
+    return node;   
+}
+
+struct octree* get_neighbour_trav_up(struct octree* node, int path[max_tree_depth], int direction, int max_path_depth){
+    //If parent == NULL, we have reached the root, meaning there is no child in the specified direction
+    if(node->parent == NULL)
+        return NULL;
+
+    int c_index = neighbour_directions[node->where_in_parent][direction];
+
+    if(c_index == -1){
+        //Has a neighbour
+        if(node->parent->children[c_index].hasChildren)
+            //Mirrored dir so that traversal happends as close to the current node as possible
+            return get_neighbour_trav_down(&node->parent->children[c_index], path, direction, max_path_depth);
+        return &node->parent->children[c_index];
+    }
+    //Add path we should take from the parent to this node
+    path[node->parent->level - 1] = node->where_in_parent;
+    //Does not have a neighbour, traverse up
+    return get_neighbour_trav_up(node->parent, path, direction, max_path_depth);
+}
+
+
+
+void calculate_neighbours(struct octree* node){
+    //Calculate neighbours for the node itself
+    for(int i = 0; i < 6; i++){
+        int path[max_tree_depth + 1];
+        node->neighbours[i] = get_neighbour_trav_up(node, path, i, node->level-1);
+    }
+    //Then if node has children, calculate neighbours for those children
+    if(node->hasChildren)
+        for(int i = 0; i < 8; i++)
+            calculate_neighbours(&node->children[i]);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct octree* get_corner(struct octree* node, int corner_dir){
+    if(!node->hasChildren && node->level > 1)
+        return node;
+    if(node->hasChildren)
+        return get_corner(&node->children[corner_dir], corner_dir);
+    return NULL;
+
+}
+
+void flood_fill(struct octree* node, int from){
+    //If the node hasnt been visited and is not a leaf node, it must be outside, traverse to neighbours
+    if(node == NULL)
+        return;
+    if(node->hasChildren){
+        //For all the neighbours in the parent
+        if(from != -1)
+            for(int i = 0; i < 3; i++){
+                    flood_fill(&node->children[neighbouring_cells[from][i]], -1);
+            }
+        else
+            for(int i = 0; i < 8; i++){
+                flood_fill(&node->children[i], -1);
+            }
+
+    }
+    if(node->is_inside && node->level > 1 && !node->hasChildren ){
+        node->is_inside = false;
+        //Go back
+        flood_fill(node->parent, node->where_in_parent);
+    }
+}
+
+
+
+
+
+void flood_fill_v2(struct octree* node){
+    for(int i = 0; i < 6; i++){
+        //Go to each neigbour and mark as empty, you might need to traverse up the tree to find neighbour
+
+        //Call flood fill on neighbour
+            //If has children, go as deep as possible, as close as the from cell as possible doesnt matter which, just one as close as possible
+            //If a neighbour or self is lvl 1, return
+    }
+
+}
+
+
+
+
+
+void fill_mode_fill(struct octree* root){
+    if(!root->hasChildren)
+        return;
+    //Flood from every corner
+    for(int i = 0; i < 8; i++){
+        struct octree* corner = get_corner(&root->children[i], i);
+        //If inside, meaning not touched, touch
+        //If NULL then the corner cell is a wall, so skip that corneer
+        if(corner != NULL && corner->is_inside){
+            flood_fill(corner, -1);
+        }
+    }
+
 }
 
 
@@ -512,8 +698,12 @@ void mesh(int long_resolution, struct model* model){
         if(model->groups[i].is_hollow){
             //fill_model(&roots[i]);
             //fill_leafs(&roots[i]);
-            fill_the_model(&roots[i]);
-            fill_voids(&roots[i]);
+            //fill_the_model(&roots[i]);
+            
+            //calculate_neighbours(&roots[i]);
+            //fill_mode_fill(&roots[i]);
+
+            //fill_voids(&roots[i]);
         }
         //else if(model->groups[i].is_hollow == 2)
             //adaptive_fill_model(&roots[i]);

@@ -180,7 +180,7 @@ bool triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* tri
     v0 = vec3_sub(triangle->v1, boxcenter);
     v1 = vec3_sub(triangle->v2, boxcenter);
     v2 = vec3_sub(triangle->v3, boxcenter);
-
+    
     e0 = vec3_sub(v1,v0);
     e1 = vec3_sub(v2,v1);
     e2 = vec3_sub(v0,v2);
@@ -231,9 +231,10 @@ bool triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* tri
 }
 
 bool intersects(struct aabb *box, struct tri *triangle, double b_div_2){
+    double box_div_2 = b_div_2 * 0.5;
     return triBoxOverlap(
-        (struct vector3){box->max.x - b_div_2, box->max.y - b_div_2, box->max.z - b_div_2}, 
-        b_div_2, 
+        (struct vector3){box->max.x - box_div_2, box->max.y - box_div_2, box->max.z - box_div_2}, 
+        box_div_2, 
         triangle
     );
 }
