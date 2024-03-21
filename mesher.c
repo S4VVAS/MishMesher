@@ -89,19 +89,17 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     aabbs[7] = (struct aabb){box.max.x - b_div_2, box.max.y  - b_div_2, box.max.z - b_div_2, 
         box.min.x, box.min.y, box.min.z};
 
+    double leaf_div_2 = b_div_2 * 0.5;
     //If tree is lowest level, look at char leafs
     //Level <= 1 as the last level is the leaf nodes
-    printf("new child\n");
     if(node->level <= 1){
         uint8_t mask = 0; // 00000000
         for(int i = 0; i < 8; i++){
-            if(intersects(&aabbs[i], triangle, b_div_2)){
+            if(intersects(&aabbs[i], triangle, leaf_div_2)){
                 //Shift by i to set correct child
                 mask = mask | 1 << i;
-                printf("b ");
             }
         }
-        printf("\n");
         node->is_voxels_solid = node->is_voxels_solid | mask;
         return;
     }
