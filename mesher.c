@@ -505,12 +505,12 @@ struct octree* get_neighbour_trav_down_deep(struct octree* node, int dir_to){
 struct octree* get_neighbour_trav_down(struct octree* node, int path[max_tree_depth], int dir_to, int max_path_depth){
     
     if(node->hasChildren){
-        if(node->level < max_path_depth){
+        if(node->level > max_path_depth){
             //We have reached the end of the path that the original node was at
-            //return get_neighbour_trav_down_deep(node, dir_to);
+            return get_neighbour_trav_down_deep(node, dir_to);
         }
         return get_neighbour_trav_down(
-            &node->children[mirrored_traverse[dir_to][path[node->level - 1]]], 
+            &node->children[mirrored_traverse[dir_to][path[node->level-1]]], 
             path, dir_to, max_path_depth);
     }
     return node;   
@@ -523,20 +523,19 @@ struct octree* get_neighbour_trav_up(struct octree* node, int path[max_tree_dept
 
     int c_index = neighbour_directions[node->where_in_parent][direction];
 
-    if(c_index == -1){
+    if(c_index != -1){
         //Has a neighbour
         if(node->parent->children[c_index].hasChildren)
-            //Mirrored dir so that traversal happends as close to the current node as possible
             return get_neighbour_trav_down(&node->parent->children[c_index], path, direction, max_path_depth);
+        //If the neighbour has no childrent, return the neighbour
         return &node->parent->children[c_index];
     }
+    //No neighbour in specified direction
     //Add path we should take from the parent to this node
     path[node->parent->level - 1] = node->where_in_parent;
     //Does not have a neighbour, traverse up
     return get_neighbour_trav_up(node->parent, path, direction, max_path_depth);
 }
-
-
 
 void calculate_neighbours(struct octree* node){
     //Calculate neighbours for the node itself
@@ -567,54 +566,28 @@ void calculate_neighbours(struct octree* node){
 
 
 struct octree* get_corner(struct octree* node, int corner_dir){
-    if(!node->hasChildren && node->level > 1)
-        return node;
+    if(!node->hasChildren){
+        if(node->level == 1)
+            return NULL;
+        else
+            return node;
+    }   
     if(node->hasChildren)
         return get_corner(&node->children[corner_dir], corner_dir);
     return NULL;
-
 }
 
-void flood_fill(struct octree* node, int from){
-    //If the node hasnt been visited and is not a leaf node, it must be outside, traverse to neighbours
-    if(node == NULL)
-        return;
-    if(node->hasChildren){
-        //For all the neighbours in the parent
-        if(from != -1)
-            for(int i = 0; i < 3; i++){
-                    flood_fill(&node->children[neighbouring_cells[from][i]], -1);
-            }
-        else
-            for(int i = 0; i < 8; i++){
-                flood_fill(&node->children[i], -1);
-            }
-
-    }
-    if(node->is_inside && node->level > 1 && !node->hasChildren ){
-        node->is_inside = false;
-        //Go back
-        flood_fill(node->parent, node->where_in_parent);
-    }
-}
-
-
-
-
-
-void flood_fill_v2(struct octree* node){
+void flood_fill(struct octree* node){
+    node->is_inside = false;
+    //Goto each neighbour
     for(int i = 0; i < 6; i++){
-        //Go to each neigbour and mark as empty, you might need to traverse up the tree to find neighbour
-
-        //Call flood fill on neighbour
-            //If has children, go as deep as possible, as close as the from cell as possible doesnt matter which, just one as close as possible
-            //If a neighbour or self is lvl 1, return
+        //Flood if the neighbour level is greater than 1
+        if(node->neighbours[i] != NULL && node->neighbours[i]->is_inside == true && node->neighbours[i]->level > 1)
+            flood_fill(node->neighbours[i]);
+        
+        //If level one or bellow stop/ignore neighbour
     }
-
 }
-
-
-
 
 
 void fill_mode_fill(struct octree* root){
@@ -626,7 +599,7 @@ void fill_mode_fill(struct octree* root){
         //If inside, meaning not touched, touch
         //If NULL then the corner cell is a wall, so skip that corneer
         if(corner != NULL && corner->is_inside){
-            flood_fill(corner, -1);
+            flood_fill(corner);
         }
     }
 
@@ -698,10 +671,10 @@ void mesh(int long_resolution, struct model* model){
             //fill_leafs(&roots[i]);
             //fill_the_model(&roots[i]);
             
-            //calculate_neighbours(&roots[i]);
-            //fill_mode_fill(&roots[i]);
+            calculate_neighbours(&roots[i]);
+            fill_mode_fill(&roots[i]);
 
-            //fill_voids(&roots[i]);
+            fill_voids(&roots[i]);
         }
         //else if(model->groups[i].is_hollow == 2)
             //adaptive_fill_model(&roots[i]);
