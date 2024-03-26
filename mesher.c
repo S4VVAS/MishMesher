@@ -24,8 +24,9 @@
             (b)
 */
 
-
-
+//lägre nummer först i merge
+//lägre nummer skriver över högre nummer
+//Lägst nummer vinner
 
 unsigned int max_tree_depth;
 
@@ -317,6 +318,7 @@ void mesh(int long_resolution, struct model* model){
         printf("%d..\n", i);
         //Malloc octree root children and set level
         roots[i].level = max_tree_depth;
+        roots[i].parent = NULL;
         malloc_children(&roots[i]);
 
         //for each face
