@@ -130,7 +130,6 @@ unsigned int nlayers(FILE* file){
 
     while(fgets(buffer, STRMAX, file))
         if(sscanf(buffer, "%s%n", key, &n) > 0){
-            const char *line_content = buffer + n;
             if (!strcmp(key, "g"))
                 layers++;      
         }
@@ -154,8 +153,6 @@ unsigned int** npoints_nfaces(FILE* file){
     
     while(fgets(buffer, STRMAX, file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
-            const char *line_content = buffer + n;
-
             if (!strcmp(key, "f")){
                 //curr_layer = curr_layer == -1 ? 0 : curr_layer;
                 nums[curr_layer][0]++;

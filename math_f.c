@@ -2,6 +2,13 @@
 
 #define EPSILON 0.000001
 
+long long timeInMilliseconds() {
+    struct timeval tv;
+
+    gettimeofday(&tv,NULL);
+    return (((long long)tv.tv_sec)*1000)+(tv.tv_usec/1000);
+}
+
 double max(double i, double j){
     return i > j ? i : j;
 }
@@ -131,7 +138,6 @@ struct vector3 vec3_sub(struct vector3 v1, struct vector3 v2){
         return 0;
 
 bool planeBoxOverlap(struct vector3 normal, struct vector3 vert, double maxbox){
-    int q;
     struct vector3 vmin, vmax;
     double v;
 
@@ -175,7 +181,7 @@ bool planeBoxOverlap(struct vector3 normal, struct vector3 vert, double maxbox){
 bool triBoxOverlap(struct vector3 boxcenter, double boxhalfsize, struct tri* triangle){
     struct vector3 v0, v1, v2;
     double min_v, max_v, p0, p1, p2, rad, fex, fey, fez;
-    struct vector3 normal, e0, e1, e2;
+    struct vector3 e0, e1, e2;
 
     v0 = vec3_sub(triangle->v1, boxcenter);
     v1 = vec3_sub(triangle->v2, boxcenter);

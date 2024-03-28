@@ -3,8 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#include <sys/time.h>
 #include "cartesian_mesh.h"
 #include "model_mesh.h"
+
+
+long long timeInMilliseconds();
 
 double max(double i, double j);
 

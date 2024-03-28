@@ -29,6 +29,8 @@
 //Lägst nummer vinner
 
 unsigned int max_tree_depth;
+int cc;
+long long start_time;
 
 //Predefined mapped arrays------>
 
@@ -65,31 +67,30 @@ unsigned int mirrored_traverse[6][8] = {
 };
 
 void malloc_children(struct octree *node){
-    //if(__sync_bool_compare_and_swap(&node->isMallocing, false, true)){
-        //We got the lock
-       // printf("Thread #%d is mallocing children\n", 0);
-        node->children = (struct octree*)malloc(sizeof(struct octree) * 8);
-        for(int i = 0; i < 8; i++){
-            node->children[i].is_voxels_solid = 0;
-            node->children[i].level = node->level - 1;
-            node->children[i].where_in_parent = i;
-            node->children[i].isMallocing = false;
-            node->children[i].hasChildren = false;
-            node->children[i].is_inside = true;
-            node->children[i].children = NULL;
-            node->children[i].parent = node;
+    
+    //Bypass the critical secion if not needed
+    if(!node->hasChildren){
+        #pragma omp critical
+        {
+            //Double check that the children still dont exist when entering the critical section
+            if(!node->hasChildren){
+                node->children = (struct octree*)malloc(sizeof(struct octree) * 8);
+                for(int i = 0; i < 8; i++){
+                    node->children[i].is_voxels_solid = 0;
+                    node->children[i].level = node->level - 1;
+                    node->children[i].where_in_parent = i;
+                    node->children[i].isMallocing = false;
+                    node->children[i].hasChildren = false;
+                    node->children[i].is_inside = true;
+                    node->children[i].children = NULL;
+                    node->children[i].parent = node;
+                }
+                node->hasChildren = true;
+                node->is_voxels_solid = 0;
+            }
         }
-        node->hasChildren = true;
-        node->is_voxels_solid = 0;
-        //node->isMallocing = false;
-   // }
-   // while(__sync_bool_compare_and_swap(&node->isMallocing, false, false)){
-        //printf("Thread #%d is waiting for children malloc\n", 0);
-        //Spinlock, wait untill children have been malloced by other thread
-        //Prone to deadlocks
-    //}
-   // return;
-  
+    }
+        
 }
 
 struct vector3 to_vector3(double* v){
@@ -139,8 +140,7 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
 
     for(int i = 0; i < 8; i++){
         if(intersects(&aabbs[i], triangle, b_div_2)){
-            if(!node->hasChildren)
-                malloc_children(node);
+            malloc_children(node);
             tree_intersections(aabbs[i], triangle, &node->children[i], b_div_2);
         }
         //If not intersect, do nothing
@@ -243,6 +243,7 @@ void calculate_neighbours(struct octree* node){
     }
     //Then if node has children, calculate neighbours for those children
     if(node->hasChildren)
+        #pragma omp parallel for num_threads(cc)
         for(int i = 0; i < 8; i++)
             calculate_neighbours(&node->children[i]);
 }
@@ -278,6 +279,7 @@ void fill_mode_fill(struct octree* root){
     if(!root->hasChildren)
         return;
     //Flood from every corner
+    #pragma omp parallel for num_threads(cc)
     for(int i = 0; i < 8; i++){
         struct octree* corner = get_corner(&root->children[i], i);
         //If inside, meaning not touched, touch
@@ -286,10 +288,12 @@ void fill_mode_fill(struct octree* root){
             flood_fill(corner);
         }
     }
-
 }
 
-void mesh(int long_resolution, struct model* model){
+void mesh(int long_resolution, struct model* model, int core_count){
+    cc = core_count;
+    start_time = timeInMilliseconds();
+
     double x_len = len(model->x_min, model->x_max);
     double y_len = len(model->y_min, model->y_max);
     double z_len = len(model->z_min, model->z_max);
@@ -322,7 +326,7 @@ void mesh(int long_resolution, struct model* model){
         malloc_children(&roots[i]);
 
         //for each face
-        //#omp parallel for
+        #pragma omp parallel for num_threads(cc)
         for(int f = 0; f < model->sizes[i][0]; f++){
             
             //Get vertices for current face
@@ -349,10 +353,18 @@ void mesh(int long_resolution, struct model* model){
             
         }
         if(model->groups[i].is_hollow){
+            long long c_time = timeInMilliseconds();
             calculate_neighbours(&roots[i]);
-            fill_mode_fill(&roots[i]);
+            printf("calculate_neighbours time: %llu ms\n", timeInMilliseconds() - c_time);
 
+            c_time = timeInMilliseconds();
+            fill_mode_fill(&roots[i]);
+            printf("fill_mode_fill time: %llu ms\n", timeInMilliseconds() - c_time);
+
+            c_time = timeInMilliseconds();
             fill_voids(&roots[i]);
+            printf("fill_voids time: %llu ms\n", timeInMilliseconds() - c_time);
+
         }
         //else if(model->groups[i].is_hollow == 2)
             //adaptive_fill_model(&roots[i]);
@@ -362,4 +374,6 @@ void mesh(int long_resolution, struct model* model){
         obj_convert(&roots[i], path, model_len);
     }
     free(roots);
+
+    printf("WALL-Time: %llu ms\n", timeInMilliseconds() - start_time);
 }
