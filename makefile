@@ -35,7 +35,7 @@ test_simple: mesh
 	./mishmesh "models/square.obj" "models/square.mprop" 60 8
 	
 test_complex: mesh
-	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" 2000 1
+	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" 500 10
 	
 test_extreme: mesh
 	./mishmesh "models/bridge.obj" "models/bridge.mprop" 4000 10

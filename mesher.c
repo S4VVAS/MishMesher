@@ -243,7 +243,7 @@ void calculate_neighbours(struct octree* node){
     }
     //Then if node has children, calculate neighbours for those children
     if(node->hasChildren)
-        #pragma omp parallel for num_threads(cc)
+        #pragma omp parallel for num_threads(cc) shared(node)
         for(int i = 0; i < 8; i++)
             calculate_neighbours(&node->children[i]);
 }
@@ -279,7 +279,7 @@ void fill_mode_fill(struct octree* root){
     if(!root->hasChildren)
         return;
     //Flood from every corner
-    #pragma omp parallel for num_threads(cc)
+    #pragma omp parallel for num_threads(cc) shared(root)
     for(int i = 0; i < 8; i++){
         struct octree* corner = get_corner(&root->children[i], i);
         //If inside, meaning not touched, touch
@@ -326,7 +326,7 @@ void mesh(int long_resolution, struct model* model, int core_count){
         malloc_children(&roots[i]);
 
         //for each face
-        #pragma omp parallel for num_threads(cc)
+        #pragma omp parallel for num_threads(cc) shared(min_size,max_tree_depth, cc, start_time, x_len, y_len, z_len, model_len, cell_size_domain, min_model_coord, max_model_coord, roots, model)
         for(int f = 0; f < model->sizes[i][0]; f++){
             
             //Get vertices for current face
