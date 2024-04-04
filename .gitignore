@@ -6,6 +6,7 @@
 *.ko
 *.obj
 *.elf
+*.msh
 
 # Custom files
 *.mat
