@@ -6,6 +6,8 @@
 *.ko
 *.obj
 *.elf
+
+# Mish files
 *.msh
 
 # Custom files

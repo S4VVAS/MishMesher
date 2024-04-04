@@ -259,11 +259,6 @@ struct octree* get_corner(struct octree* node, int corner_dir){
     return NULL;
 }
 
-
-
-
-
-
 void flood_fill(struct octree* node){
     node->is_inside = false;
 
@@ -274,9 +269,6 @@ void flood_fill(struct octree* node){
         if(node->neighbours[i] != NULL && node->neighbours[i]->is_voxels_solid == 0 && node->neighbours[i]->is_inside)
             flood_fill(node->neighbours[i]);
 }
-
-
-
 
 void fill_mode_fill(struct octree* root){
     if(!root->hasChildren)
@@ -293,49 +285,31 @@ void fill_mode_fill(struct octree* root){
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 void intersect_master(struct octree* master, struct octree** trees, int n_layers, int start_from){
      if(master != NULL){
-       
         if(!master->hasChildren && master->is_voxels_solid > 0){
          for(int i = start_from; i < n_layers; i++)
             if(trees[i] != NULL){
                 uint8_t and = trees[i]->is_voxels_solid & master->is_voxels_solid;
                 trees[i]->is_voxels_solid = trees[i]->is_voxels_solid ^ and;
             }
-                
         }
-         
         if(master->hasChildren){
             //Loop through all children in the master tree
             for(int m = 0; m < 8; m++){
                 struct octree** children = (struct octree**)malloc(n_layers * sizeof(struct octree*));
-                for(int i = start_from; i < n_layers; i++){
-                    //For every tree, follow the path in master by also going to the same child
+                //For every tree, follow the path in master by also going to the same child
+                for(int i = start_from; i < n_layers; i++)
                     children[i] = trees[i] != NULL && trees[i]->hasChildren ? &trees[i]->children[m] : NULL;
-                }
                 intersect_master(&master->children[m], children, n_layers, start_from);
                 free(children);
-              
             }
         }
     }
+
 }
 
 void intersect_trees(struct octree* roots, int n_layers){
-
     struct octree** trees = (struct octree**)malloc(n_layers * sizeof(struct octree*));
     for(int i = 0; i < n_layers; i++)
         trees[i] = &roots[i];
@@ -345,19 +319,6 @@ void intersect_trees(struct octree* roots, int n_layers){
             intersect_master(&roots[i], trees, n_layers, i + 1);
     free(trees);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void mesh(int long_resolution, struct model* model, int core_count, char* out_path){
     cc = core_count;
@@ -446,15 +407,18 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
         
     }
 
+
+    c_time = timeInMilliseconds();
     intersect_trees(roots, model->n_layers);
+    printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
     mish_convert(roots, model->n_layers, out_path, model_len);
 
-    for(int i = 0; i < model->n_layers; i++){
-       char path[256];
-       sprintf(path, "obj_converted/%d.obj", i);
-       obj_convert(&roots[i], path, model_len);
-    }
+    //for(int i = 0; i < model->n_layers; i++){
+     //  char path[256];
+    //   sprintf(path, "obj_converted/%d.obj", i);
+    //   obj_convert(&roots[i], path, model_len);
+    //}
 
     free(roots);
 
