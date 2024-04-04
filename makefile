@@ -1,4 +1,4 @@
-LINKED= obj_importer.c mesher.c math_f.c obj_converter.c
+LINKED= obj_importer.c mesher.c math_f.c obj_converter.c mish_converter.c
 OS := $(shell uname)
 
 OBJ_DIR = obj_converted
@@ -27,16 +27,16 @@ clean:
 	rm -f ./mishmesh *.o
 	rm -f $(OBJ_FILES)
 
-#   			model-path  material-path  long-resolution  core-count
+#   			model-path  material-path out-file-name  long-resolution  core-count
 test: mesh
-	./mishmesh "models/g7.obj" "models/g7.mprop" 500 8
+	./mishmesh "models/g7.obj" "models/g7.mprop" "msh_converted/mish_file_test" 16 10 
 	
 test_simple: mesh
-	./mishmesh "models/square.obj" "models/square.mprop" 60 8
+	./mishmesh "models/square.obj" "models/square.mprop" "msh_converted/mish_file_simple" 60 8
 	
 test_complex: mesh
-	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" 500 10
+	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" "msh_converted/mish_file_complex" 500 10
 	
 test_extreme: mesh
-	./mishmesh "models/bridge.obj" "models/bridge.mprop" 4000 10
+	./mishmesh "models/bridge.obj" "models/bridge.mprop" "msh_converted/mish_file_extreme" 1000 10
 

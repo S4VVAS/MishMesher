@@ -24,9 +24,12 @@
             (b)
 */
 
-//lägre nummer först i merge
-//lägre nummer skriver över högre nummer
-//Lägst nummer vinner
+
+
+
+
+
+
 
 unsigned int max_tree_depth;
 int cc;
@@ -67,7 +70,6 @@ unsigned int mirrored_traverse[6][8] = {
 };
 
 void malloc_children(struct octree *node){
-    
     //Bypass the critical secion if not needed
     if(!node->hasChildren){
         #pragma omp critical
@@ -77,20 +79,18 @@ void malloc_children(struct octree *node){
                 node->children = (struct octree*)malloc(sizeof(struct octree) * 8);
                 for(int i = 0; i < 8; i++){
                     node->children[i].is_voxels_solid = 0;
-                    node->children[i].level = node->level - 1;
-                    node->children[i].where_in_parent = i;
-                    node->children[i].isMallocing = false;
                     node->children[i].hasChildren = false;
                     node->children[i].is_inside = true;
+                    node->children[i].where_in_parent = i;
+                    node->children[i].level = node->level - 1;
                     node->children[i].children = NULL;
                     node->children[i].parent = node;
                 }
-                node->hasChildren = true;
                 node->is_voxels_solid = 0;
+                node->hasChildren = true;
             }
         }
     }
-        
 }
 
 struct vector3 to_vector3(double* v){
@@ -201,7 +201,6 @@ struct octree* get_neighbour_trav_down_deep(struct octree* node, int dir_to){
 }
 
 struct octree* get_neighbour_trav_down(struct octree* node, int path[max_tree_depth], int dir_to, int max_path_depth){
-    
     if(node->hasChildren){
         if(node->level <= max_path_depth){
             //We have reached the end of the path that the original node was at
@@ -243,7 +242,7 @@ void calculate_neighbours(struct octree* node){
     }
     //Then if node has children, calculate neighbours for those children
     if(node->hasChildren)
-        #pragma omp parallel for num_threads(cc) shared(node)
+        #pragma omp parallel for num_threads(cc > 8 ? 8 : cc) shared(node)
         for(int i = 0; i < 8; i++)
             calculate_neighbours(&node->children[i]);
 }
@@ -260,26 +259,30 @@ struct octree* get_corner(struct octree* node, int corner_dir){
     return NULL;
 }
 
+
+
+
+
+
 void flood_fill(struct octree* node){
     node->is_inside = false;
 
     if(node->hasChildren)
-        for(int i = 0; i < 8; i++){
+        for(int i = 0; i < 8; i++)
             flood_fill(&node->children[i]);
-        }
-    //Goto each neighbour
-    for(int i = 0; i < 6; i++){
-        //Flood if the neighbour level is greater than 1
+    for(int i = 0; i < 6; i++)
         if(node->neighbours[i] != NULL && node->neighbours[i]->is_voxels_solid == 0 && node->neighbours[i]->is_inside)
             flood_fill(node->neighbours[i]);
-    }
 }
+
+
+
 
 void fill_mode_fill(struct octree* root){
     if(!root->hasChildren)
         return;
     //Flood from every corner
-    #pragma omp parallel for num_threads(cc) shared(root)
+   #pragma omp parallel for num_threads(cc > 8 ? 8 : cc) shared(root)
     for(int i = 0; i < 8; i++){
         struct octree* corner = get_corner(&root->children[i], i);
         //If inside, meaning not touched, touch
@@ -290,7 +293,73 @@ void fill_mode_fill(struct octree* root){
     }
 }
 
-void mesh(int long_resolution, struct model* model, int core_count){
+
+
+
+
+
+
+
+
+
+
+
+
+
+void intersect_master(struct octree* master, struct octree** trees, int n_layers, int start_from){
+     if(master != NULL){
+       
+        if(!master->hasChildren && master->is_voxels_solid > 0){
+         for(int i = start_from; i < n_layers; i++)
+            if(trees[i] != NULL){
+                uint8_t and = trees[i]->is_voxels_solid & master->is_voxels_solid;
+                trees[i]->is_voxels_solid = trees[i]->is_voxels_solid ^ and;
+            }
+                
+        }
+         
+        if(master->hasChildren){
+            //Loop through all children in the master tree
+            for(int m = 0; m < 8; m++){
+                struct octree** children = (struct octree**)malloc(n_layers * sizeof(struct octree*));
+                for(int i = start_from; i < n_layers; i++){
+                    //For every tree, follow the path in master by also going to the same child
+                    children[i] = trees[i] != NULL && trees[i]->hasChildren ? &trees[i]->children[m] : NULL;
+                }
+                intersect_master(&master->children[m], children, n_layers, start_from);
+                free(children);
+              
+            }
+        }
+    }
+}
+
+void intersect_trees(struct octree* roots, int n_layers){
+
+    struct octree** trees = (struct octree**)malloc(n_layers * sizeof(struct octree*));
+    for(int i = 0; i < n_layers; i++)
+        trees[i] = &roots[i];
+    for(int i = 0; i < n_layers; i++)
+        if(&(roots[i]) != NULL)
+            //i + 1 skipps the nodes that are/ have been masters
+            intersect_master(&roots[i], trees, n_layers, i + 1);
+    free(trees);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void mesh(int long_resolution, struct model* model, int core_count, char* out_path){
     cc = core_count;
     start_time = timeInMilliseconds();
 
@@ -317,6 +386,7 @@ void mesh(int long_resolution, struct model* model, int core_count){
     struct octree* roots = (struct octree*)malloc(sizeof(struct octree) * model->n_layers);
     printf("Blocking faces in Layer:\n");
 
+    long long c_time = timeInMilliseconds();
     //for each material/layer
     for(int i = 0; i < model->n_layers; i++){
         printf("%d..\n", i);
@@ -352,28 +422,41 @@ void mesh(int long_resolution, struct model* model, int core_count){
             }
             
         }
+        printf("intersections time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
         if(model->groups[i].is_hollow){
-            long long c_time = timeInMilliseconds();
+            c_time = timeInMilliseconds();
             calculate_neighbours(&roots[i]);
-            printf("calculate_neighbours time: %llu ms\n", timeInMilliseconds() - c_time);
+            printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
 
             c_time = timeInMilliseconds();
             fill_mode_fill(&roots[i]);
-            printf("fill_mode_fill time: %llu ms\n", timeInMilliseconds() - c_time);
+            printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
             c_time = timeInMilliseconds();
             fill_voids(&roots[i]);
-            printf("fill_voids time: %llu ms\n", timeInMilliseconds() - c_time);
+            printf("fill_voids time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
         }
         //else if(model->groups[i].is_hollow == 2)
             //adaptive_fill_model(&roots[i]);
+        
 
-        char path[256];
-        sprintf(path, "obj_converted/%d.obj", i);
-        obj_convert(&roots[i], path, model_len);
+      
+
+        
     }
+
+    intersect_trees(roots, model->n_layers);
+
+    mish_convert(roots, model->n_layers, out_path, model_len);
+
+    for(int i = 0; i < model->n_layers; i++){
+       char path[256];
+       sprintf(path, "obj_converted/%d.obj", i);
+       obj_convert(&roots[i], path, model_len);
+    }
+
     free(roots);
 
-    printf("WALL-Time: %llu ms\n", timeInMilliseconds() - start_time);
+    printf("\nWALL-Time: \t\t\t %llu ms\n", timeInMilliseconds() - start_time);
 }

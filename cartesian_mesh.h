@@ -42,8 +42,6 @@ struct octree{
     uint8_t is_voxels_solid;
     unsigned int level;
     char where_in_parent;
-
-    bool isMallocing;
     bool hasChildren;
     //Used for layer fill -> classifies node as outside or inside
     bool is_inside;
@@ -56,8 +54,4 @@ struct octree{
     struct octree* parent;
 };
 
-struct cell{
-    uint8_t is_voxels_solid; 
-    bool is_inside;
-    struct cell* neighbours[6];
-};
+
