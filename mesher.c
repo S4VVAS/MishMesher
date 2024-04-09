@@ -412,13 +412,13 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     intersect_trees(roots, model->n_layers);
     printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
-    mish_convert(roots, model->n_layers, out_path, model_len);
+    mish_convert(roots, model->n_layers, out_path, model_len, cc);
 
-    //for(int i = 0; i < model->n_layers; i++){
-     //  char path[256];
-    //   sprintf(path, "obj_converted/%d.obj", i);
-    //   obj_convert(&roots[i], path, model_len);
-    //}
+    /*for(int i = 0; i < model->n_layers; i++){
+       char path[256];
+       sprintf(path, "obj_converted/%d.obj", i);
+       obj_convert(&roots[i], path, model_len);
+    }*/
 
     free(roots);
 
