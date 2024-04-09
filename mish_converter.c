@@ -45,13 +45,24 @@ void make_tmp(struct octree* node, FILE* tmp_file, int parent){
             //A level 2 node that contains children, contains 8 level 1 nodes. 
             //Those level 1 nodes always include leafs, thus print it all to the file
             uint8_t solids[8];
+
+
+            //Check if all the children are either solid or empty to save on size of file
             bool has_solids = false;
+            bool all_solids = true;
             for(int i = 0; i < 8; i++){
                 solids[i] = node->children[i].is_voxels_solid;
                 if(solids[i] > 0)
                     has_solids = true;
+                 if(solids[i] < 255)
+                    all_solids = false;
             }
-            if(has_solids)
+            
+            if(!has_solids)
+                fprintf(tmp_file, "0\n");
+            else if(all_solids)
+                fprintf(tmp_file, "255\n");
+            else
                 fprintf(tmp_file, "%d %d %d %d %d %d %d %d\n",
                 solids[0],
                 solids[1],
@@ -62,8 +73,7 @@ void make_tmp(struct octree* node, FILE* tmp_file, int parent){
                 solids[6],
                 solids[7]
                 );
-            else
-                fprintf(tmp_file, "0\n");
+
         }
         else
             fprintf(tmp_file, "%d %d\n", parent, node->level);
@@ -95,7 +105,7 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
 
     FILE* tmp_files[n_layers];
     
-    #pragma omp parallel for num_threads(n_threads) shared(tmp_files)
+    #pragma omp parallel for num_threads(n_threads > n_layers ? n_layers : n_threads) shared(tmp_files)
     for(int i = 0; i < n_layers; i++)
         tmp_files[i] = create_tmp(&trees[i], path, i);
     
