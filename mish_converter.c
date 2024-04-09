@@ -39,7 +39,7 @@ FORMAT IDEAS:
 
 //Child traversal order 0,1,2,3,4,5,6,7
 
-void make_tmp(struct octree* node, FILE* tmp_file){
+void make_tmp(struct octree* node, FILE* tmp_file, int parent){
     if(node->hasChildren){
         if(node->level == 2){
             //A level 2 node that contains children, contains 8 level 1 nodes. 
@@ -66,9 +66,9 @@ void make_tmp(struct octree* node, FILE* tmp_file){
                 fprintf(tmp_file, "0\n");
         }
         else
-            fprintf(tmp_file, "%d\n", node->level);
+            fprintf(tmp_file, "%d %d\n", parent, node->level);
             for(int i = 0; i < 8; i++){
-                make_tmp(&node->children[i], tmp_file);
+                make_tmp(&node->children[i], tmp_file, i);
             }
     }
     else if(node->level == 2)
@@ -82,7 +82,7 @@ FILE* create_tmp(struct octree* root, char* path, int n){
 
     //Write layer number for tree
     fprintf(tmp_file, "L %d\n", n);
-    make_tmp(root, tmp_file);
+    make_tmp(root, tmp_file, -1);
 
     //REMEMBER TO CLOSE THE FILES RETURNED
     free(tmp_file_path);
