@@ -291,6 +291,13 @@ void flood_nodes(struct octree* root){
     
 }
 
+void init_flood(){
+    struct stack* stk = (struct stack*)malloc(sizeof(struct stack*));
+    init_stack(stk);
+    
+
+}
+
 void intersect_master(struct octree* master, struct octree** trees, int n_layers, int start_from){
      if(master != NULL){
         if(!master->hasChildren && master->is_voxels_solid > 0){

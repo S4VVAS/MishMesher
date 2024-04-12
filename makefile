@@ -1,4 +1,4 @@
-LINKED= obj_importer.c mesher.c math_f.c obj_converter.c mish_converter.c
+LINKED= obj_importer.c mesher.c math_f.c obj_converter.c mish_converter.c stack.c
 OS := $(shell uname)
 
 OBJ_DIR = obj_converted
