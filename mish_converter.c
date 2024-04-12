@@ -1,43 +1,23 @@
 #include "mish_converter.h"
 
-/*
-FORMAT IDEAS:
-
-
-
-*/
-
-
-//lägre nummer först i merge
-//lägre nummer skriver över högre nummer
-//Lägst nummer vinner
-
-//x y z - material i  x y z
-
-//Granne = x + 1, y + 1, z + 1
-
-//Så (1,1,2) = mat 1
-//   (2,1,2) = mat 2
-//   (3,1,2) = mat 3
-//OSV
-
-//Så  (1,1,2) har granne med mat 2
-//Och (2,1,2) har granne med mat 3
-//OSV
-
 
 
 //FILE STRUCTURE
-//Header info: n_layers, octree side-size
-//New level in tree = level num + \n
-//Each level has 8 children which are specified as a new level above
-//A level 1 node has 8 leafs, represented by 8 8-bit integers
-//  A level 2 node contains 8 level 1 nodes, thus contains 8 lines of 8 8-bit integers
+//Header info: 
+    //n_layers, octree side-size
+    //Coordinates for octree TOP-RIGHT-FRONT corner
+//Layout for nodes with level > 2: 
+    //EACH LINE: Parent-location and Level
+    //eg. 2 11, node is on location 2 of the parent, and on level 11 in the tree.
+//Layout for nodes with level <= 2:
+    //Each level 2 node is represented as a new line (total 8 lines).
+    //Each line contains the level 1 nodes contained within the level 2 node.
+    //The level 1 nodes are represented by an integer that represents the leaf nodes.
+        //Each integer represents 8 leafs (If the leaf is solid).
+    //To save on file size, level 2 nodes that contain either all empty or all full leaf-
+    //nodes are compressed as a single integer value, 0 for all empty or 255 for all full.
 
-//Parallelize by splitting the work into 8 threads, each parsing one child of the node
-//Create new threads at each level, allowing for a more distributed workload
-
-//Child traversal order 0,1,2,3,4,5,6,7
+//Child traversal order 0 -> 7
 
 void make_tmp(struct octree* node, FILE* tmp_file, int parent){
     if(node->hasChildren){
@@ -45,7 +25,6 @@ void make_tmp(struct octree* node, FILE* tmp_file, int parent){
             //A level 2 node that contains children, contains 8 level 1 nodes. 
             //Those level 1 nodes always include leafs, thus print it all to the file
             uint8_t solids[8];
-
 
             //Check if all the children are either solid or empty to save on size of file
             bool has_solids = false;
@@ -73,7 +52,6 @@ void make_tmp(struct octree* node, FILE* tmp_file, int parent){
                 solids[6],
                 solids[7]
                 );
-
         }
         else
             fprintf(tmp_file, "%d %d\n", parent, node->level);
@@ -99,7 +77,6 @@ FILE* create_tmp(struct octree* root, char* path, int n){
     return tmp_file;
 }
 
-
 void create_mish(struct octree* trees, unsigned int n_layers, double box_size, char* path, FILE* m_file, int n_threads){
     //Create threads that work on each tree separately, might be unbalanced workloads though..
 
@@ -120,11 +97,8 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
         rewind(tmp_files[i]);
         while ((c = fgetc(tmp_files[i])) != EOF){
             fputc(c, m_file); 
-        }
-            
+        }       
     }
-
-
 
     char* tmp_file_path = (char*)malloc(sizeof(char) * 256);
     for(int i = 0; i < n_layers; i++){
@@ -134,10 +108,6 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
     }
     free(tmp_file_path);
 }
-
-
-
-
 
 void mish_convert(struct octree* trees, unsigned int n_layers, char* path, double box_size, int num_threads){
     
