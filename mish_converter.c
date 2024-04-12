@@ -5,7 +5,10 @@
 //FILE STRUCTURE
 //Header info: 
     //n_layers, octree side-size
-    //Coordinates for octree TOP-RIGHT-FRONT corner
+    //Coordinates for octree TOP-RIGHT-FRONT corner (MAX_COORDS(x,y,z))
+//Each tree in the model represents a new "layer" or "material"
+    //A tree is defined with L X, where L is a layer identification symbol
+        // and X is an integer representing the tree's layer/material number 
 //Layout for nodes with level > 2: 
     //EACH LINE: Parent-location and Level
     //eg. 2 11, node is on location 2 of the parent, and on level 11 in the tree.
@@ -68,28 +71,25 @@ FILE* create_tmp(struct octree* root, char* path, int n){
     sprintf(tmp_file_path, "%s-%d.tmp", path, n);
     FILE* tmp_file = fopen(tmp_file_path, "w+");
 
-    //Write layer number for tree
+    //Write layer/material number for tree
     fprintf(tmp_file, "L %d\n", n);
     make_tmp(root, tmp_file, -1);
 
-    //REMEMBER TO CLOSE THE FILES RETURNED
     free(tmp_file_path);
     return tmp_file;
 }
 
-void create_mish(struct octree* trees, unsigned int n_layers, double box_size, char* path, FILE* m_file, int n_threads){
-    //Create threads that work on each tree separately, might be unbalanced workloads though..
-
+void create_mish(struct octree* trees, unsigned int n_layers, double box_size, char* path, FILE* m_file, int n_threads, struct vector3 coords){
     FILE* tmp_files[n_layers];
-    
+
+    //Create threads that work on each tree separately, might be unbalanced workloads.. (potential fix in later versions)
     #pragma omp parallel for num_threads(n_threads > n_layers ? n_layers : n_threads) shared(tmp_files)
     for(int i = 0; i < n_layers; i++)
         tmp_files[i] = create_tmp(&trees[i], path, i);
     
     fprintf(m_file, "MishMesh V1\n");
     fprintf(m_file, "%d %f\n", n_layers, box_size);
-    //TOP/FRONT/RIGHT CORNER COORDINATES
-    fprintf(m_file, "%f %f %f\n", 0.0, 0.0, 0.0);
+    fprintf(m_file, "%f %f %f\n", coords.x, coords.y, coords.z);
     
     //COMBINE FILES
     for(int i = 0; i < n_layers; i++){
@@ -101,6 +101,7 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
     }
 
     char* tmp_file_path = (char*)malloc(sizeof(char) * 256);
+    //Close and remove all .tmp files
     for(int i = 0; i < n_layers; i++){
         fclose(tmp_files[i]);
         sprintf(tmp_file_path, "%s-%d.tmp", path, i);
@@ -109,7 +110,7 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
     free(tmp_file_path);
 }
 
-void mish_convert(struct octree* trees, unsigned int n_layers, char* path, double box_size, int num_threads){
+void mish_convert(struct octree* trees, unsigned int n_layers, char* path, double box_size, int num_threads, struct vector3 coords){
     
     if (trees == NULL || n_layers <= 0)
         return;
@@ -127,7 +128,7 @@ void mish_convert(struct octree* trees, unsigned int n_layers, char* path, doubl
     }
     FILE* m_file = fopen(out_path, "w");
 
-    create_mish(trees, n_layers, box_size, path, m_file, num_threads);
+    create_mish(trees, n_layers, box_size, path, m_file, num_threads, coords);
 
     
     fclose(m_file); 

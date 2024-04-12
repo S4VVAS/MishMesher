@@ -13,8 +13,6 @@ struct tri {
     struct vector3 v1, v2, v3;
 };
 
-
-
 struct material_group{
     //material index
     unsigned int material_label;

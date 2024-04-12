@@ -365,6 +365,8 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     cc = core_count;
     start_time = timeInMilliseconds();
 
+    struct vector3 model_coords = {model->x_max, model->y_max, model->z_max};
+
     double x_len = len(model->x_min, model->x_max);
     double y_len = len(model->y_min, model->y_max);
     double z_len = len(model->z_min, model->z_max);
@@ -453,7 +455,7 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     intersect_trees(roots, model->n_layers);
     printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
-    mish_convert(roots, model->n_layers, out_path, model_len, cc);
+    mish_convert(roots, model->n_layers, out_path, model_len, cc, model_coords);
 
     /*for(int i = 0; i < model->n_layers; i++){
        char path[256];
