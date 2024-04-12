@@ -19,4 +19,4 @@ void shrink_capacity(struct stack* stk);
 struct octree* pop(struct stack* stk);
 void push(struct stack* stk, struct octree* word);
 struct octree* top(struct stack* stk);
-int size(struct stack* stk);
+int stack_size(struct stack* stk);

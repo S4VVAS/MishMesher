@@ -53,6 +53,6 @@ struct octree* top(struct stack* stk) {
     return (struct octree*) stk->stack[stk->no_of_words - 1];
 }
 
-int size(struct stack* stk) {
+int stack_size(struct stack* stk) {
     return stk->no_of_words;
 }

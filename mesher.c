@@ -288,13 +288,41 @@ void fill_mode_fill(struct octree* root){
 
 
 void flood_nodes(struct octree* root){
-    
-}
-
-void init_flood(){
     struct stack* stk = (struct stack*)malloc(sizeof(struct stack*));
     init_stack(stk);
-    
+
+    push(stk, root);
+
+    while(stack_size(stk) > 0){
+        struct octree* curr_node = pop(stk);
+        curr_node->is_inside = false;
+        
+        if(curr_node->hasChildren){
+            for(int i = 0; i < 8; i++)
+                push(stk, &curr_node->children[i]);
+        }
+        for(int i = 0; i < 6; i++){
+            if(curr_node->neighbours[i] != NULL && curr_node->neighbours[i]->is_voxels_solid == 0 && curr_node->neighbours[i]->is_inside)
+                push(stk, curr_node->neighbours[i]);
+        }
+    }
+    destroy_stack(stk);
+}
+
+void init_flood(struct octree* root){
+    if(!root->hasChildren)
+        return;
+    #pragma omp parallel for num_threads(cc > 8 ? 8 : cc) shared(root)
+    for(int i = 0; i < 8; i++){
+        
+
+        struct octree* corner = get_corner(&root->children[i], i);
+        //If inside, meaning not touched, touch
+        //If NULL then the corner cell is a wall, so skip that corneer
+        if(corner != NULL && corner->is_inside){
+            flood_nodes(corner);
+        }
+    }
 
 }
 
@@ -403,7 +431,7 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
             printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
 
             c_time = timeInMilliseconds();
-            fill_mode_fill(&roots[i]);
+            init_flood(&roots[i]);
             printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
             c_time = timeInMilliseconds();
