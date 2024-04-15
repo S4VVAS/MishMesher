@@ -1,7 +1,5 @@
 #include "mish_converter.h"
 
-
-
 //FILE STRUCTURE
 //Header info: 
     //n_layers, octree side-size
@@ -91,7 +89,7 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
     fprintf(m_file, "%d %f\n", n_layers, box_size);
     fprintf(m_file, "%f %f %f\n", coords.x, coords.y, coords.z);
     
-    //COMBINE FILES
+    //Combine all .tmp files into .msh
     for(int i = 0; i < n_layers; i++){
         char c; 
         rewind(tmp_files[i]);
@@ -111,7 +109,6 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
 }
 
 void mish_convert(struct octree* trees, unsigned int n_layers, char* path, double box_size, int num_threads, struct vector3 coords){
-    
     if (trees == NULL || n_layers <= 0)
         return;
     
@@ -130,7 +127,6 @@ void mish_convert(struct octree* trees, unsigned int n_layers, char* path, doubl
 
     create_mish(trees, n_layers, box_size, path, m_file, num_threads, coords);
 
-    
     fclose(m_file); 
     free(out_path);
 }

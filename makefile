@@ -8,14 +8,13 @@ OPTIONS:=
 
 #CHANGE FOR WINDOWS LATER
 ifeq ($(OS),Windows)
-OPTIONS += -framework OpenCL 
+#openMP
+OPTIONS += -fopenmp -lomp -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include
 endif
 
 ifeq ($(OS),Darwin)
-#openCL
-OPTIONS += -framework OpenCL -Xpreprocessor 
 #openMP
-OPTIONS += -fopenmp -lomp -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include
+OPTIONS += -Xpreprocessor -fopenmp -lomp -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include
 endif
 
 

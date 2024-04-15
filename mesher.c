@@ -24,13 +24,6 @@
             (b)
 */
 
-
-
-
-
-
-
-
 unsigned int max_tree_depth;
 int cc;
 long long start_time;
@@ -428,35 +421,30 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
         }
         printf("intersections time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
         if(model->groups[i].is_hollow){
-            c_time = timeInMilliseconds();
+           // c_time = timeInMilliseconds();
             calculate_neighbours(&roots[i]);
-            printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
+          //  printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
 
-            c_time = timeInMilliseconds();
+          //  c_time = timeInMilliseconds();
             init_flood(&roots[i]);
-            printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
+          //  printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
-            c_time = timeInMilliseconds();
+         //   c_time = timeInMilliseconds();
             fill_voids(&roots[i]);
-            printf("fill_voids time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
+          //  printf("fill_voids time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
         }
         //else if(model->groups[i].is_hollow == 2)
             //adaptive_fill_model(&roots[i]);
-        
-
-      
-
-        
     }
 
-
-    c_time = timeInMilliseconds();
+   // c_time = timeInMilliseconds();
     intersect_trees(roots, model->n_layers);
-    printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
+  //  printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
     mish_convert(roots, model->n_layers, out_path, model_len, cc, model_coords);
 
+    //UNCOMMENT FOR OBJ OUTPUT
     /*for(int i = 0; i < model->n_layers; i++){
        char path[256];
        sprintf(path, "obj_converted/%d.obj", i);
