@@ -377,7 +377,7 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     long long c_time = timeInMilliseconds();
     //for each material/layer
     for(int i = 0; i < model->n_layers; i++){
-        printf("%d..\t", i);
+        printf("%d.. ", i);
         if((i+1) % 10 == 0)
             printf("\n");
         //Malloc octree root children and set level
@@ -436,11 +436,11 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     mish_convert(roots, model->n_layers, out_path, model_len, cc, model_coords);
 
     //UNCOMMENT FOR OBJ OUTPUT
-    /*for(int i = 0; i < model->n_layers; i++){
+    for(int i = 0; i < model->n_layers; i++){
        char path[256];
        sprintf(path, "obj_converted/%d.obj", i);
        obj_convert(&roots[i], path, model_len);
-    }*/
+    }
 
     for(int i = 0; i < model->n_layers; i++){
        demalloc_tree(&roots[i]);

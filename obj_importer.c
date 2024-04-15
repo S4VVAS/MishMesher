@@ -171,7 +171,6 @@ unsigned int** npoints_nfaces(FILE* file){
 }
 
 void destroy_model(struct model* mesh) {
-   
     for (int i = 0; i < mesh->n_layers; i++) {
         for(int f = 0; f < mesh->sizes[i][0]; f++)
             free(mesh->groups[i].faces[f]);

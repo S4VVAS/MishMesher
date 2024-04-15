@@ -35,5 +35,5 @@ test_complex: mesh
 	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" "msh_converted/mish_file_complex" 500 8
 	
 test_extreme: mesh
-	./mishmesh "models/bridge.obj" "models/bridge.mprop" "msh_converted/mish_file_extreme" 1000 8
+	./mishmesh "models/bridge.obj" "models/bridge.mprop" "msh_converted/mish_file_extreme" 4000 8
 
