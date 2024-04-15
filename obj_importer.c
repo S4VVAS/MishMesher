@@ -171,6 +171,7 @@ unsigned int** npoints_nfaces(FILE* file){
 }
 
 void destroy_model(struct model* mesh) {
+   
     for (int i = 0; i < mesh->n_layers; i++) {
         for(int f = 0; f < mesh->sizes[i][0]; f++)
             free(mesh->groups[i].faces[f]);
@@ -178,6 +179,9 @@ void destroy_model(struct model* mesh) {
     }
     for(int i = 0; i < mesh->sizes[0][1]; i++)
         free(mesh->points[i]);
+    for(int i = 0; i < imported_number_of_layers; i++)
+        free(mesh->sizes[i]);
+    free(mesh->sizes);
     free(mesh->points);
     free(mesh->groups);
     free(mesh);
@@ -256,9 +260,6 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
     free(curr_iter);
     close_file(file);
     mesh->n_layers = imported_number_of_layers;
-    
-    
-   
 
     return mesh;
 }
