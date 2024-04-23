@@ -20,6 +20,15 @@
 
 //Child traversal order 0 -> 7
 
+long long n_cells;
+
+void n_solid(uint8_t leaf){
+    for(int i = 0; i < 8; i++){
+        if(leaf & 1 << i)
+            n_cells++;
+    }
+}
+
 void make_tmp(struct octree* node, FILE* tmp_file, int parent){
     if(node->hasChildren){
         if(node->level == 2){
@@ -34,8 +43,9 @@ void make_tmp(struct octree* node, FILE* tmp_file, int parent){
                 solids[i] = node->children[i].is_voxels_solid;
                 if(solids[i] > 0)
                     has_solids = true;
-                 if(solids[i] < 255)
+                if(solids[i] < 255)
                     all_solids = false;
+                n_solid(solids[i]);
             }
             
             if(!has_solids)
@@ -129,4 +139,6 @@ void mish_convert(struct octree* trees, unsigned int n_layers, char* path, doubl
 
     fclose(m_file); 
     free(out_path);
+
+    printf("Mish file generated containing %llu cells\n", n_cells);
 }

@@ -262,3 +262,5 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
 
     return mesh;
 }
+
+//SKRIV HUR MÅNGA CELLER SOM FINNS I DOMÄNEN FÖR BENCHMARKING

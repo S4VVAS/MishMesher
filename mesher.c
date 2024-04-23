@@ -424,6 +424,7 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
 
         }
     }
+    printf("\n\n");
 
     // c_time = timeInMilliseconds();
     intersect_trees(roots, model->n_layers);
@@ -443,5 +444,5 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     free(roots);
     
 
-    printf("\nWALL-Time: \t\t\t %llu ms\n", timeInMilliseconds() - start_time);
+    printf("\nWALL-Time: %llu ms\n\n", timeInMilliseconds() - start_time);
 }
