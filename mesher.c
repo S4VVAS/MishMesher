@@ -446,3 +446,18 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
 
     printf("\nWALL-Time: %llu ms\n\n", timeInMilliseconds() - start_time);
 }
+
+
+
+
+///____________________________________________________///
+/*
+
+IF TIME PERMITS!!!
+
+*   Write a .geo converter from .msh
+
+*   Change parameter from domain size to cell size
+
+
+*///____________________________________________________///

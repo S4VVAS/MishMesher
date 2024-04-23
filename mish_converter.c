@@ -139,6 +139,6 @@ void mish_convert(struct octree* trees, unsigned int n_layers, char* path, doubl
 
     fclose(m_file); 
     free(out_path);
-
+    
     printf("Mish file generated containing %llu cells\n", n_cells);
 }
