@@ -263,7 +263,6 @@ struct octree* get_corner(struct octree* node, int corner_dir){
 void flood_nodes(struct octree* root){
     struct stack* stk = (struct stack*)malloc(sizeof(struct stack*));
     init_stack(stk);
-
     push(stk, root);
 
     while(stack_size(stk) > 0){
@@ -287,14 +286,11 @@ void init_flood(struct octree* root){
         return;
     #pragma omp parallel for num_threads(cc > 8 ? 8 : cc) shared(root)
     for(int i = 0; i < 8; i++){
-        
-
         struct octree* corner = get_corner(&root->children[i], i);
         //If inside, meaning not touched, touch
         //If NULL then the corner cell is a wall, so skip that corneer
-        if(corner != NULL && corner->is_inside){
+        if(corner != NULL && corner->is_inside)
             flood_nodes(corner);
-        }
     }
 
 }
@@ -368,7 +364,7 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
         max_tree_depth++;
 
     printf("Octree max depth: %d\n", max_tree_depth);
-    printf("Generating model containing %f cells...\n", 1.0 * long_resolution * long_resolution * long_resolution );
+    printf("Generating model in domain containing %f cells...\n", 1.0 * long_resolution * long_resolution * long_resolution );
 
     //Malloc an octree for each layer in model
     struct octree* roots = (struct octree*)malloc(sizeof(struct octree) * model->n_layers);
@@ -436,15 +432,14 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     mish_convert(roots, model->n_layers, out_path, model_len, cc, model_coords);
 
     //UNCOMMENT FOR OBJ OUTPUT
-    for(int i = 0; i < model->n_layers; i++){
+    /*for(int i = 0; i < model->n_layers; i++){
        char path[256];
        sprintf(path, "obj_converted/%d.obj", i);
        obj_convert(&roots[i], path, model_len);
-    }
+    }*/
 
-    for(int i = 0; i < model->n_layers; i++){
+    for(int i = 0; i < model->n_layers; i++)
        demalloc_tree(&roots[i]);
-    }
     free(roots);
     
 
