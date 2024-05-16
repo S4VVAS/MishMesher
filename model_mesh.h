@@ -25,10 +25,11 @@ struct material_group{
 
 //Main model
 struct model{
-    //layer sizes = [L1[n_points, n_faces], L2[n_points, n_faces],...]
     double x_max, y_max, z_max, x_min, y_min, z_min;
-    double **points;
+    //Vertices contained in model
+    double **points; 
     unsigned int n_layers;
+    //layer sizes = [L1[n_points, n_faces], L2[n_points, n_faces],...]
     unsigned int** sizes;
     struct material_group *groups;
 };

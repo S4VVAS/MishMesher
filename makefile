@@ -32,7 +32,7 @@ test_simple: mesh
 	./mishmesh "models/square.obj" "models/square.mprop" "msh_converted/mish_file_simple" 1000 8
 	
 test_complex: mesh
-	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" "msh_converted/mish_file_complex" 4000 8
+	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" "msh_converted/mish_file_complex" "0.1" 8
 	
 test_extreme: mesh
 	./mishmesh "models/bridge.obj" "models/bridge.mprop" "msh_converted/mish_file_extreme" 4000 8

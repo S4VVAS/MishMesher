@@ -13,7 +13,7 @@ int main(int argc, char** argv){
     if(model == NULL)
         return 1;
 
-    //Correct resolution if needed
+    /*Correct resolution if needed
     int res = atoi(argv[4]);
     int new_res = 2;
     while(new_res < res)
@@ -21,9 +21,9 @@ int main(int argc, char** argv){
     if(res != new_res){
         res = new_res;
         printf("Warning: resolution not an exponent of 2, resizing up to nearest exponent -> %d\n", new_res);
-    }
+    }*/
 
-    mesh(res, model, atoi(argv[5]), argv[3]);
+    mesh(atof(argv[4]), model, atoi(argv[5]), argv[3]);
 
     destroy_model(model);
 

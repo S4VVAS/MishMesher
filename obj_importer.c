@@ -237,7 +237,7 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
                 parse_vector(lc, mesh, curr_iter);
                 curr_iter[1]++;
             }
-            else if (!strcmp(key, "g")){ 
+            else if (!strcmp(key, "g")){
                 curr_iter[0] = 0;
                 curr_iter[2]++;
                 parse_layer(mesh, curr_iter);

@@ -16,7 +16,7 @@
              | 
              |  __ 2 (bk)
              |/
- (l) 5 - - -[#]- - - 3 (r)
+ (l) 5 - - -[#]- - - 4 (r)
            / |
  (fr) 3 __/  |
              |
@@ -121,13 +121,12 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     //Level <= 1 as the last level is the leaf nodes
     if(node->level <= 1){
         uint8_t mask = 0; // 00000000
-        for(int i = 0; i < 8; i++){
+        for(int i = 0; i < 8; i++)
             if(intersects(&aabbs[i], triangle, leaf_div_2)){
                 //Shift by i to set correct child
                 mask = mask | 1 << i;
             }
-        }
-        node->is_voxels_solid = node->is_voxels_solid | mask;
+        while (node->is_voxels_solid != atomic_fetch_or(&node->is_voxels_solid, mask));
         return;
     }
 
@@ -267,7 +266,7 @@ void flood_nodes(struct octree* root){
 
     while(stack_size(stk) > 0){
         struct octree* curr_node = pop(stk);
-        curr_node->is_inside = false;
+        atomic_store(&curr_node->is_inside, false);
         
         if(curr_node->hasChildren){
             for(int i = 0; i < 8; i++)
@@ -341,7 +340,7 @@ void demalloc_tree(struct octree* node){
     free(node->children);
 }
 
-void mesh(int long_resolution, struct model* model, int core_count, char* out_path){
+void mesh(double cell_size, struct model* model, int core_count, char* out_path){
     cc = core_count;
     start_time = timeInMilliseconds();
 
@@ -354,17 +353,31 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     double min_model_coord = min(model->z_min, min(model->x_min, model->y_min));
     double max_model_coord = max(model->z_max, max(model->x_max, model->y_max));
     double model_len = len(min_model_coord,max_model_coord);
-    double cell_size_domain = max(x_len, max(y_len, z_len)) / long_resolution;
+
+    printf("MODEL LEN: %f\n", model_len);
+
+    double d_s = cell_size;
+    max_tree_depth = 1;
+    while((d_s *= 2.0) <= model_len)
+        max_tree_depth++;
+
+    double rest = abs_v(d_s - model_len);
+    max_model_coord += rest;
+
+    printf("Max domain length: %f -> Final cell size: %f\n",  d_s, cell_size);
+
+
+    /*double cell_size_domain = max(x_len, max(y_len, z_len)) / long_resolution;
 
     printf("Max domain length: %f -> Final cell size: %f\n",  model_len, cell_size_domain);
     double min_size = model_len;
     max_tree_depth = 0;
 
     while((min_size /= 2.0) >= cell_size_domain)
-        max_tree_depth++;
+        max_tree_depth++;*/
 
     printf("Octree max depth: %d\n", max_tree_depth);
-    printf("Generating model in domain containing %f cells...\n", 1.0 * long_resolution * long_resolution * long_resolution );
+    printf("Generating model in domain containing %f cells...\n", 1.0 * d_s * d_s * d_s );
 
     //Malloc an octree for each layer in model
     struct octree* roots = (struct octree*)malloc(sizeof(struct octree) * model->n_layers);
@@ -382,7 +395,7 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
         malloc_children(&roots[i]);
 
         //for each face
-        #pragma omp parallel for num_threads(cc) shared(min_size,max_tree_depth, cc, start_time, x_len, y_len, z_len, model_len, cell_size_domain, min_model_coord, max_model_coord, roots, model)
+        #pragma omp parallel for num_threads(cc) shared(max_tree_depth, cc, start_time, x_len, y_len, z_len, d_s, min_model_coord, max_model_coord, roots, model)
         for(int f = 0; f < model->sizes[i][0]; f++){
             
             //Get vertices for current face
@@ -397,14 +410,14 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
             //If the face is a triangle
             if(v4 == NULL){
                 struct tri triangle = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
-                tree_intersections(box, &triangle, &roots[i], model_len);
+                tree_intersections(box, &triangle, &roots[i], d_s);
             }
             //Else its a square, split into 2 separate triangles and do intersection test on each
             else{
                 struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v4)};
                 struct tri triangle_b = {to_vector3(v4), to_vector3(v2), to_vector3(v3)};
-                tree_intersections(box, &triangle_a, &roots[i], model_len);
-                tree_intersections(box, &triangle_b, &roots[i], model_len);
+                tree_intersections(box, &triangle_a, &roots[i], d_s);
+                tree_intersections(box, &triangle_b, &roots[i], d_s);
             }
             
         }
@@ -430,13 +443,13 @@ void mesh(int long_resolution, struct model* model, int core_count, char* out_pa
     intersect_trees(roots, model->n_layers);
     // printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
-    mish_convert(roots, model->n_layers, out_path, model_len, cc, model_coords);
+    mish_convert(roots, model->n_layers, out_path, d_s, cc, model_coords);
 
     //UNCOMMENT FOR OBJ OUTPUT
     /*for(int i = 0; i < model->n_layers; i++){
        char path[256];
        sprintf(path, "obj_converted/%d.obj", i);
-       obj_convert(&roots[i], path, model_len);
+       obj_convert(&roots[i], path, d_s);
     }*/
 
     for(int i = 0; i < model->n_layers; i++)

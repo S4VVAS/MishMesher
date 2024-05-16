@@ -2,6 +2,7 @@
 
 #include <stdbool.h> 
 #include <stdint.h> 
+#include <stdatomic.h>
 /*
 struct c_mesh{
     unsigned int size;
@@ -39,17 +40,14 @@ struct cc_mesh{
 */
 
 struct octree{
-    uint8_t is_voxels_solid;
+    _Atomic uint8_t is_voxels_solid;
     unsigned int level;
     char where_in_parent;
     bool hasChildren;
     //Used for layer fill -> classifies node as outside or inside
-    bool is_inside;
-
-    //Used to eaily calculate size of blocks
+    _Atomic bool is_inside;
 
     struct octree* neighbours[6];
-
     struct octree* children;
     struct octree* parent;
 };
