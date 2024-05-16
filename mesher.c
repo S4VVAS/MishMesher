@@ -354,7 +354,10 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     double max_model_coord = max(model->z_max, max(model->x_max, model->y_max));
     double model_len = len(min_model_coord,max_model_coord);
 
-    printf("MODEL LEN: %f\n", model_len);
+    printf("\n-- BLOCK MESH INFO --\n\n\n");
+
+
+    printf("Imported model length: %f\n", model_len);
 
     double d_s = cell_size;
     max_tree_depth = 1;
@@ -364,24 +367,14 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     double rest = abs_v(d_s - model_len);
     max_model_coord += rest;
 
-    printf("Max domain length: %f -> Final cell size: %f\n",  d_s, cell_size);
-
-
-    /*double cell_size_domain = max(x_len, max(y_len, z_len)) / long_resolution;
-
-    printf("Max domain length: %f -> Final cell size: %f\n",  model_len, cell_size_domain);
-    double min_size = model_len;
-    max_tree_depth = 0;
-
-    while((min_size /= 2.0) >= cell_size_domain)
-        max_tree_depth++;*/
-
+    printf("Domain length changed to: %f - to accommodate final cell size of: %f\n",  d_s, cell_size);
     printf("Octree max depth: %d\n", max_tree_depth);
-    printf("Generating model in domain containing %f cells...\n", 1.0 * d_s * d_s * d_s );
 
-    //Malloc an octree for each layer in model
     struct octree* roots = (struct octree*)malloc(sizeof(struct octree) * model->n_layers);
-    printf("Blocking faces in Layer:\n");
+
+    printf("\n\n-- GENERATING BLOCK MESH --\n\n\n");
+    //Malloc an octree for each layer in model
+    printf("Intersecting faces in Layer:\n");
 
     long long c_time = timeInMilliseconds();
     //for each material/layer

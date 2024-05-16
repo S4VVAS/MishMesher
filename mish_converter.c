@@ -20,7 +20,7 @@
 
 //Child traversal order 0 -> 7
 
-long long n_cells;
+_Atomic long long n_cells;
 
 void n_solid(uint8_t leaf){
     for(int i = 0; i < 8; i++){
@@ -140,5 +140,5 @@ void mish_convert(struct octree* trees, unsigned int n_layers, char* path, doubl
     fclose(m_file); 
     free(out_path);
     
-    printf("Mish file generated containing %llu cells\n", n_cells);
+    printf(".MSH file generated containing %llu cells\n", n_cells);
 }
