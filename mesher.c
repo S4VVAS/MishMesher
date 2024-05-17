@@ -377,6 +377,14 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     printf("Intersecting faces in Layer:\n");
 
     long long c_time = timeInMilliseconds();
+
+    long long int_time = 0;
+    long long n_time = 0;
+    long long fl_time = 0;
+    long long fi_time = 0;
+    long long int_t_time = 0;
+    long long msh_time = 0;
+
     //for each material/layer
     for(int i = 0; i < model->n_layers; i++){
         printf("%d.. ", i);
@@ -386,7 +394,8 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
         roots[i].level = max_tree_depth;
         roots[i].parent = NULL;
         malloc_children(&roots[i]);
-
+        
+        c_time = timeInMilliseconds();
         //for each face
         #pragma omp parallel for num_threads(cc) shared(max_tree_depth, cc, start_time, x_len, y_len, z_len, d_s, min_model_coord, max_model_coord, roots, model)
         for(int f = 0; f < model->sizes[i][0]; f++){
@@ -414,29 +423,35 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
             }
             
         }
+        int_time += timeInMilliseconds() - c_time;
         //printf("intersections time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
         if(model->groups[i].is_hollow){
-            // c_time = timeInMilliseconds();
+            c_time = timeInMilliseconds();
             calculate_neighbours(&roots[i]);
+            n_time += timeInMilliseconds() - c_time;
             //  printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
 
-            //  c_time = timeInMilliseconds();
+            c_time = timeInMilliseconds();
             init_flood(&roots[i]);
+            fl_time += timeInMilliseconds() - c_time;
             //  printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
-            //   c_time = timeInMilliseconds();
+            c_time = timeInMilliseconds();
             fill_voids(&roots[i]);
+            fi_time += timeInMilliseconds() - c_time;
             //  printf("fill_voids time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
 
         }
     }
     printf("\n\n");
 
-    // c_time = timeInMilliseconds();
+    c_time = timeInMilliseconds();
     intersect_trees(roots, model->n_layers);
+    int_t_time = timeInMilliseconds() - c_time;
     // printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
-
+    c_time = timeInMilliseconds();
     mish_convert(roots, model->n_layers, out_path, d_s, cc, model_coords);
+    msh_time = timeInMilliseconds() - c_time;
 
     //UNCOMMENT FOR OBJ OUTPUT
     /*for(int i = 0; i < model->n_layers; i++){
@@ -451,6 +466,8 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     
 
     printf("\nWALL-Time: %llu ms\n\n", timeInMilliseconds() - start_time);
+    printf("int = %llu ms\t ne = %llu ms\t fl = %llu ms\n fi = %llu ms\t int_trees = %llu ms\t msh = %llu ms\n\n", int_time, n_time, fl_time, fi_time, int_t_time, msh_time);
+
 }
 
 
@@ -462,8 +479,5 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
 IF TIME PERMITS!!!
 
 *   Write a .geo converter from .msh
-
-*   Change parameter from domain size to cell size
-
 
 *///____________________________________________________///
