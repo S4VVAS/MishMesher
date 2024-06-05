@@ -14,7 +14,7 @@ endif
 
 ifeq ($(OS),Darwin)
 #openMP
-OPTIONS += -Xpreprocessor -fopenmp -lomp -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include
+OPTIONS += -Xpreprocessor -fopenmp -lomp -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include  -O 
 endif
 
 ifeq ($(OS),Linux)
@@ -24,7 +24,7 @@ OPTIONS += -fopenmp
 endif
 
 mesh: clean
-	gcc $(LINKED) -O main.c -o mishmesh $(OPTIONS)
+	gcc $(LINKED) main.c -o mishmesh $(OPTIONS)
 
 clean:
 	rm -f ./mishmesh *.o
