@@ -1,4 +1,4 @@
- #include "mesher.h"
+#include "mesher.h"
 
 #if __STDC_VERSION__ < 201112L || __STDC_NO_ATOMICS__ == 1
 #error "ATOMICS NOT SUPPORTED! CAN'T COMPILE"
@@ -60,6 +60,29 @@ unsigned int mirrored_traverse[6][8] = {
     {1,0,3,2,5,4,7,6}, //Front
     {2,3,0,1,6,7,4,5}, //Right
     {2,3,0,1,6,7,4,5}  //Left
+};
+
+//Theise arrays allow for better load balancing when running multiple threads
+unsigned int parent[64] = {
+    0,0,0,0,0,0,0,0,
+    1,1,1,1,1,1,1,1,
+    2,2,2,2,2,2,2,2,
+    3,3,3,3,3,3,3,3,
+    4,4,4,4,4,4,4,4,
+    5,5,5,5,5,5,5,5,
+    6,6,6,6,6,6,6,6,
+    7,7,7,7,7,7,7,7
+};
+
+unsigned int child[64] = {
+    0,1,2,3,4,5,6,7,
+    0,1,2,3,4,5,6,7,
+    0,1,2,3,4,5,6,7,
+    0,1,2,3,4,5,6,7,
+    0,1,2,3,4,5,6,7,
+    0,1,2,3,4,5,6,7,
+    0,1,2,3,4,5,6,7,
+    0,1,2,3,4,5,6,7
 };
 
 void malloc_children(struct octree *node){
@@ -240,9 +263,13 @@ void calculate_neighbours_rec(struct octree* node){
 
 void calculate_neighbours(struct octree* root){
     if(root->hasChildren)
-        #pragma omp parallel for num_threads(cc > 8 ? 8 : cc) shared(root)
-        for(int i = 0; i < 8; i++){
-            calculate_neighbours_rec(&root->children[i]);
+        #pragma omp parallel for schedule(dynamic) num_threads(cc > 64 ? 64 : cc) shared(root)
+        for(int i = 0; i < 64; i++){
+            if(!root->children[parent[i]].hasChildren){
+                calculate_neighbours_rec(&root->children[parent[i]]);
+            }
+            else
+                calculate_neighbours_rec(&root->children[parent[i]].children[child[i]]);
         }
 
 }
@@ -318,16 +345,32 @@ void intersect_master(struct octree* master, struct octree** trees, int n_layers
 
 }
 
-void intersect_trees(struct octree* roots, int n_layers){
+void intersect_trees(struct octree** roots, int n_layers){
     struct octree** trees = (struct octree**)malloc(n_layers * sizeof(struct octree*));
     for(int i = 0; i < n_layers; i++)
-        trees[i] = &roots[i];
+        trees[i] = roots[i];
     for(int i = 0; i < n_layers; i++)
         if(&(roots[i]) != NULL)
             //i + 1 skipps the nodes that are/ have been masters
-            intersect_master(&roots[i], trees, n_layers, i + 1);
+            intersect_master(roots[i], trees, n_layers, i + 1);
     free(trees);
 }
+
+void parallel_intersect(struct octree* roots, int n_layers) {
+    #pragma omp parallel for num_threads(cc > 8 ? 8 : cc) schedule(dynamic)
+    for (int i = 0; i < 8; i++) {
+        struct octree** trees = (struct octree**)malloc(n_layers * sizeof(struct octree*));
+        for (int c = 0; c < n_layers; c++) {
+            if (roots[c].hasChildren)
+                trees[c] = &roots[c].children[i];
+            else
+                trees[c] = NULL;
+        }
+        intersect_trees(trees, n_layers);
+        free(trees);
+    }
+}
+
 
 void demalloc_tree(struct octree* node){
     if(node == NULL)
@@ -397,7 +440,7 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
         
         c_time = timeInMilliseconds();
         //for each face
-        #pragma omp parallel for num_threads(cc) shared(max_tree_depth, cc, start_time, x_len, y_len, z_len, d_s, min_model_coord, max_model_coord, roots, model)
+        #pragma omp parallel for num_threads(cc) shared(max_tree_depth, cc, start_time, x_len, y_len, z_len, d_s, min_model_coord, max_model_coord, roots, model)  schedule(dynamic)
         for(int f = 0; f < model->sizes[i][0]; f++){
             
             //Get vertices for current face
@@ -446,7 +489,7 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     printf("\n\n");
 
     c_time = timeInMilliseconds();
-    intersect_trees(roots, model->n_layers);
+    parallel_intersect(roots, model->n_layers);
     int_t_time = timeInMilliseconds() - c_time;
     // printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
     c_time = timeInMilliseconds();
@@ -454,11 +497,11 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     msh_time = timeInMilliseconds() - c_time;
 
     //UNCOMMENT FOR OBJ OUTPUT
-    /*for(int i = 0; i < model->n_layers; i++){
+    for(int i = 0; i < model->n_layers; i++){
        char path[256];
        sprintf(path, "obj_converted/%d.obj", i);
        obj_convert(&roots[i], path, d_s);
-    }*/
+    }
 
     for(int i = 0; i < model->n_layers; i++)
        demalloc_tree(&roots[i]);
@@ -466,7 +509,7 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     
 
     printf("\nWALL-Time: %llu ms\n\n", timeInMilliseconds() - start_time);
-    printf("int = %llu ms\t ne = %llu ms\t fl = %llu ms\n fi = %llu ms\t int_trees = %llu ms\t msh = %llu ms\n\n", int_time, n_time, fl_time, fi_time, int_t_time, msh_time);
+    printf("int/p = %llu ms\t ne/p = %llu ms\t fl = %llu ms\n fi = %llu ms\t int_trees/p = %llu ms\t msh = %llu ms\n\n", int_time, n_time, fl_time, fi_time, int_t_time, msh_time);
 
 }
 

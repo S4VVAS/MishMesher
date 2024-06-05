@@ -20,7 +20,7 @@
 
 //Child traversal order 0 -> 7
 
-_Atomic long long n_cells;
+long long n_cells;
 
 void n_solid(uint8_t leaf){
     for(int i = 0; i < 8; i++){
@@ -91,7 +91,6 @@ void create_mish(struct octree* trees, unsigned int n_layers, double box_size, c
     FILE* tmp_files[n_layers];
 
     //Create threads that work on each tree separately, might be unbalanced workloads.. (potential fix in later versions)
-    #pragma omp parallel for num_threads(n_threads > n_layers ? n_layers : n_threads) shared(tmp_files)
     for(int i = 0; i < n_layers; i++)
         tmp_files[i] = create_tmp(&trees[i], path, i);
     
