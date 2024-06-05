@@ -24,7 +24,7 @@ OPTIONS += -fopenmp
 endif
 
 mesh: clean
-	gcc $(LINKED) main.c -o mishmesh $(OPTIONS) -O
+	gcc -O $(LINKED) main.c -o mishmesh $(OPTIONS)
 
 clean:
 	rm -f ./mishmesh *.o
