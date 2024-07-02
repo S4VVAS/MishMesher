@@ -85,6 +85,17 @@ unsigned int child[64] = {
     0,1,2,3,4,5,6,7
 };
 
+void demalloc_tree(struct octree *node){
+    if(node == NULL)
+        return;
+    if(node->hasChildren){
+        for (int i = 0; i < 8; i++)
+            demalloc_tree(&node->children[i]);
+    }
+
+    free(node->children);
+}
+
 void malloc_children(struct octree *node){
     //Bypass the critical secion if not needed
     if(!node->hasChildren){
@@ -114,7 +125,7 @@ struct vector3 to_vector3(double* v){
     return vec;
 }
 
-void tree_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
+void determine_intersections(struct aabb box, struct tri* triangle, struct octree* node, double box_size){
     
     //For every child in the current node check for intersections
     double b_div_2 = box_size * 0.5;
@@ -156,7 +167,7 @@ void tree_intersections(struct aabb box, struct tri* triangle, struct octree* no
     for(int i = 0; i < 8; i++){
         if(intersects(&aabbs[i], triangle, b_div_2)){
             malloc_children(node);
-            tree_intersections(aabbs[i], triangle, &node->children[i], b_div_2);
+            determine_intersections(aabbs[i], triangle, &node->children[i], b_div_2);
         }
         //If not intersect, do nothing
     }
@@ -321,14 +332,37 @@ void init_flood(struct octree* root){
 
 }
 
-void intersect_master(struct octree* master, struct octree** trees, int n_layers, int start_from){
+void intersect_master(bool is_master_hollow, struct octree* master, struct octree** trees, int n_layers, int start_from){
      if(master != NULL){
-        if(!master->hasChildren && master->is_voxels_solid > 0){
-         for(int i = start_from; i < n_layers; i++)
-            if(trees[i] != NULL){
-                uint8_t and = trees[i]->is_voxels_solid & master->is_voxels_solid;
-                trees[i]->is_voxels_solid = trees[i]->is_voxels_solid ^ and;
+        //End of path reached for master
+        if(!master->hasChildren){
+            if(is_master_hollow){
+                for(int i = start_from; i < n_layers; i++)
+                    if(trees[i] != NULL){
+                        //If shell
+                        if( master->is_voxels_solid > 0){
+                            uint8_t prev = master->is_voxels_solid;
+                            fill_lvl1(master);
+                            uint8_t and = trees[i]->is_voxels_solid & master->is_voxels_solid;
+                            trees[i]->is_voxels_solid = trees[i]->is_voxels_solid ^ and;
+
+                            master->is_voxels_solid = prev;
+                        }
+                        //If inside node, destroy all children of all other nodes
+                        else
+                            if(master->is_inside && trees[i]->hasChildren){
+                                trees[i]->hasChildren = false;
+                                for(int c = 0; c < 8; c++)
+                                    demalloc_tree(&trees[i]->children[c]);
+                            }
+                    }
             }
+            else 
+                for(int i = start_from; i < n_layers; i++) 
+                    if(trees[i] != NULL && master->is_voxels_solid > 0){
+                        uint8_t and = trees[i]->is_voxels_solid & master->is_voxels_solid;
+                        trees[i]->is_voxels_solid = trees[i]->is_voxels_solid ^ and;
+                }
         }
         if(master->hasChildren){
             //Loop through all children in the master tree
@@ -337,7 +371,7 @@ void intersect_master(struct octree* master, struct octree** trees, int n_layers
                 //For every tree, follow the path in master by also going to the same child
                 for(int i = start_from; i < n_layers; i++)
                     children[i] = trees[i] != NULL && trees[i]->hasChildren ? &trees[i]->children[m] : NULL;
-                intersect_master(&master->children[m], children, n_layers, start_from);
+                intersect_master(is_master_hollow, &master->children[m], children, n_layers, start_from);
                 free(children);
             }
         }
@@ -345,18 +379,19 @@ void intersect_master(struct octree* master, struct octree** trees, int n_layers
 
 }
 
-void intersect_trees(struct octree** roots, int n_layers){
+void intersect_trees(struct octree** roots, int n_layers, struct material_group *groups){
     struct octree** trees = (struct octree**)malloc(n_layers * sizeof(struct octree*));
     for(int i = 0; i < n_layers; i++)
         trees[i] = roots[i];
     for(int i = 0; i < n_layers; i++)
-        if(&(roots[i]) != NULL)
+        if(&(roots[i]) != NULL){
             //i + 1 skipps the nodes that are/ have been masters
-            intersect_master(roots[i], trees, n_layers, i + 1);
+            intersect_master(!groups[i].is_hollow ,roots[i], trees, n_layers, i + 1);
+        }
     free(trees);
 }
 
-void parallel_intersect(struct octree* roots, int n_layers) {
+void parallel_intersect(struct octree* roots, int n_layers, struct material_group *groups) {
     #pragma omp parallel for num_threads(cc > 8 ? 8 : cc) schedule(dynamic)
     for (int i = 0; i < 8; i++) {
         struct octree** trees = (struct octree**)malloc(n_layers * sizeof(struct octree*));
@@ -366,22 +401,13 @@ void parallel_intersect(struct octree* roots, int n_layers) {
             else
                 trees[c] = NULL;
         }
-        intersect_trees(trees, n_layers);
+        intersect_trees(trees, n_layers, groups);
         free(trees);
     }
 }
 
 
-void demalloc_tree(struct octree* node){
-    if(node == NULL)
-        return;
-    if(node->hasChildren){
-        for (int i = 0; i < 8; i++)
-            demalloc_tree(&node->children[i]);
-    }
 
-    free(node->children);
-}
 
 void mesh(double cell_size, struct model* model, int core_count, char* out_path){
     cc = core_count;
@@ -455,30 +481,30 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
             //If the face is a triangle
             if(v4 == NULL){
                 struct tri triangle = {to_vector3(v1), to_vector3(v2), to_vector3(v3)};
-                tree_intersections(box, &triangle, &roots[i], d_s);
+                determine_intersections(box, &triangle, &roots[i], d_s);
             }
             //Else its a square, split into 2 separate triangles and do intersection test on each
             else{
                 struct tri triangle_a = {to_vector3(v1), to_vector3(v2), to_vector3(v4)};
                 struct tri triangle_b = {to_vector3(v4), to_vector3(v2), to_vector3(v3)};
-                tree_intersections(box, &triangle_a, &roots[i], d_s);
-                tree_intersections(box, &triangle_b, &roots[i], d_s);
+                determine_intersections(box, &triangle_a, &roots[i], d_s);
+                determine_intersections(box, &triangle_b, &roots[i], d_s);
             }
             
         }
         int_time += timeInMilliseconds() - c_time;
         //printf("intersections time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
+        
+        c_time = timeInMilliseconds();
+        calculate_neighbours(&roots[i]);
+        n_time += timeInMilliseconds() - c_time;
+        //  printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
+
+        c_time = timeInMilliseconds();
+        init_flood(&roots[i]);
+        fl_time += timeInMilliseconds() - c_time;
+        //  printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
         if(model->groups[i].is_hollow){
-            c_time = timeInMilliseconds();
-            calculate_neighbours(&roots[i]);
-            n_time += timeInMilliseconds() - c_time;
-            //  printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
-
-            c_time = timeInMilliseconds();
-            init_flood(&roots[i]);
-            fl_time += timeInMilliseconds() - c_time;
-            //  printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
-
             c_time = timeInMilliseconds();
             fill_voids(&roots[i]);
             fi_time += timeInMilliseconds() - c_time;
@@ -489,7 +515,7 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     printf("\n\n");
 
     c_time = timeInMilliseconds();
-    parallel_intersect(roots, model->n_layers);
+    parallel_intersect(roots, model->n_layers, model->groups);
     int_t_time = timeInMilliseconds() - c_time;
     // printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
     c_time = timeInMilliseconds();

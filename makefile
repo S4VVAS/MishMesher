@@ -32,14 +32,14 @@ clean:
 
 #PARAMS:  model-path  material-path out-file-name  long-resolution  core-count
 test: mesh
-	./mishmesh "models/g7.obj" "models/g7.mprop" "msh_converted/mish_file_test" "5" 8
+	./mishmesh "models/g7.obj" "models/g7.mprop" "msh_converted/mish_file_test" "1" 8
 	
 test_simple: mesh
-	./mishmesh "models/square.obj" "models/square.mprop" "msh_converted/mish_file_simple" "5" 8
+	./mishmesh "models/square.obj" "models/square.mprop" "msh_converted/mish_file_simple" "0.6" 8
 	
 test_complex: mesh
-	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" "msh_converted/mish_file_complex" "0.5" 8
+	./mishmesh "models/Seahawk.obj" "models/Seahawk.mprop" "msh_converted/mish_file_complex" "1" 8
 	
 test_extreme: mesh
-	./mishmesh "models/Seahawk_fixed.obj" "models/bridge.mprop" "msh_converted/mish_file_extreme" "5" 8
+	./mishmesh "models/radome.obj" "models/radome.mprop" "msh_converted/mish_file_extreme" "1" 8
 
