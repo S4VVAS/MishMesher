@@ -12,7 +12,6 @@ struct stack{
     struct octree** stack;
 };
 
-
 void init_stack(struct stack* stk);
 void destroy_stack(struct stack* stk);
 void shrink_capacity(struct stack* stk);

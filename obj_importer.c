@@ -42,8 +42,8 @@ struct model* import_mesh(char* path, char* mat_file_path){
         return NULL;
     }
 
-    printf("OBJ file found with given path: %s\n", path);
-    printf("MAT file found with given path: %s\n", mat_file_path);
+    printf("\nOBJ file found with given path: %s\n", path);
+    printf("\nMAT file found with given path: %s\n\n", mat_file_path);
 
     return parse_mesh(file, mat_file);
 }
@@ -113,7 +113,8 @@ struct model* alloc_model(unsigned int** sizes){
         mesh->points[i] = (double*)calloc(3, sizeof(double));
 
     for(int i = 0; i < imported_number_of_layers; i++){
-        printf("Layer %d contains: %d faces\n",i,sizes[i][0]);
+        //UNCOMMENT TO PRINT NUMBER OF FACES PER LAYER
+        //printf("Layer %d contains: %d faces\n",i,sizes[i][0]);
         mesh->groups[i].faces = (unsigned int**)malloc(sizes[i][0] * sizeof(unsigned int*));
         for(int j = 0; j < sizes[i][0]; j++)
             mesh->groups[i].faces[j] = (unsigned int*)calloc(4, sizeof(unsigned int));
@@ -145,7 +146,6 @@ unsigned int** npoints_nfaces(FILE* file){
 
     imported_number_of_layers = nlayers(file);
 
-    //nums = [l1[], l2[]]
     unsigned int** nums = malloc(sizeof(unsigned int*) * imported_number_of_layers);
     for(int i = 0; i < imported_number_of_layers; i++){
         nums[i] = (unsigned int*) calloc(2,sizeof(unsigned int));
@@ -153,14 +153,10 @@ unsigned int** npoints_nfaces(FILE* file){
     
     while(fgets(buffer, STRMAX, file)){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
-            if (!strcmp(key, "f")){
-                //curr_layer = curr_layer == -1 ? 0 : curr_layer;
-                nums[curr_layer][0]++;
-            }    
-            else if (!strcmp(key, "v")) {
-                //curr_layer = curr_layer == -1 ? 0 : curr_layer;
-                nums[0][1]++;
-            }   
+            if (!strcmp(key, "f"))
+                nums[curr_layer][0]++;    
+            else if (!strcmp(key, "v")) 
+                nums[0][1]++;   
             else if (!strcmp(key, "g"))
                 curr_layer++;
         }
@@ -202,7 +198,8 @@ void parse_material_properties(FILE* mat_file, struct model* mesh){
                 strcpy(editable_line, line_content);
                 char* token = strtok(editable_line, " ");
                 mesh->groups[curr_layer].is_hollow = atoi(token);
-                printf("Layer %d will %s\n", curr_layer, mesh->groups[curr_layer].is_hollow ? "be filled" : "be hollow");
+                //UNCOMMENT FOR OUTPUT: IF LAYER IS FILLED OR NOT
+                //printf("Layer %d will %s\n", curr_layer, mesh->groups[curr_layer].is_hollow ? "be filled" : "be hollow");
             }
         }
     }       
@@ -228,12 +225,10 @@ struct model* parse_mesh(FILE* file, FILE* mat_file){
         if(sscanf(buffer, "%s%n", key, &n) > 0){
             const char *lc = buffer + n;
             if (!strcmp(key, "f")){
-                //curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
                 parse_face(lc, mesh, curr_iter);
                 curr_iter[0]++;
             }
             else if (!strcmp(key, "v")){
-                //curr_iter[2] = curr_iter[2] == -1 ? 0 : curr_iter[2];
                 parse_vector(lc, mesh, curr_iter);
                 curr_iter[1]++;
             }

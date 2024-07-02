@@ -329,7 +329,6 @@ void init_flood(struct octree* root){
         if(corner != NULL && corner->is_inside)
             flood_nodes(corner);
     }
-
 }
 
 void intersect_master(bool is_master_hollow, struct octree* master, struct octree** trees, int n_layers, int start_from){
@@ -376,7 +375,6 @@ void intersect_master(bool is_master_hollow, struct octree* master, struct octre
             }
         }
     }
-
 }
 
 void intersect_trees(struct octree** roots, int n_layers, struct material_group *groups){
@@ -445,14 +443,6 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
     //Malloc an octree for each layer in model
     printf("Intersecting faces in Layer:\n");
 
-    long long c_time = timeInMilliseconds();
-
-    long long int_time = 0;
-    long long n_time = 0;
-    long long fl_time = 0;
-    long long fi_time = 0;
-    long long int_t_time = 0;
-    long long msh_time = 0;
 
     //for each material/layer
     for(int i = 0; i < model->n_layers; i++){
@@ -464,8 +454,7 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
         roots[i].parent = NULL;
         malloc_children(&roots[i]);
         
-        c_time = timeInMilliseconds();
-        //for each face
+        //For each face
         #pragma omp parallel for num_threads(cc) shared(max_tree_depth, cc, start_time, x_len, y_len, z_len, d_s, min_model_coord, max_model_coord, roots, model)  schedule(dynamic)
         for(int f = 0; f < model->sizes[i][0]; f++){
             
@@ -474,7 +463,7 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
             double* v2 = model->points[model->groups[i].faces[f][1] - 1];
             double* v3 = model->points[model->groups[i].faces[f][2] - 1];
             double* v4 = model->groups[i].faces[f][3] != 0 ? model->points[model->groups[i].faces[f][3] - 1] : NULL;
-            //printf("\n");
+
             //Create AABB the size of the domain
             struct aabb box = {max_model_coord,max_model_coord,max_model_coord, min_model_coord,min_model_coord,min_model_coord};
 
@@ -490,53 +479,29 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
                 determine_intersections(box, &triangle_a, &roots[i], d_s);
                 determine_intersections(box, &triangle_b, &roots[i], d_s);
             }
-            
         }
-        int_time += timeInMilliseconds() - c_time;
-        //printf("intersections time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
         
-        c_time = timeInMilliseconds();
         calculate_neighbours(&roots[i]);
-        n_time += timeInMilliseconds() - c_time;
-        //  printf("calculate_neighbours time: \t %llu ms\n", timeInMilliseconds() - c_time);
-
-        c_time = timeInMilliseconds();
         init_flood(&roots[i]);
-        fl_time += timeInMilliseconds() - c_time;
-        //  printf("fill_mode_fill time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
-        if(model->groups[i].is_hollow){
-            c_time = timeInMilliseconds();
+        if(model->groups[i].is_hollow)
             fill_voids(&roots[i]);
-            fi_time += timeInMilliseconds() - c_time;
-            //  printf("fill_voids time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
-
-        }
     }
-    printf("\n\n");
-
-    c_time = timeInMilliseconds();
+    printf("\n\nIntersecting material layers...\n\n");
     parallel_intersect(roots, model->n_layers, model->groups);
-    int_t_time = timeInMilliseconds() - c_time;
-    // printf("\nall materials intersect time: \t\t %llu ms\n", timeInMilliseconds() - c_time);
-    c_time = timeInMilliseconds();
+    printf("Creating .MSH..\n");
     mish_convert(roots, model->n_layers, out_path, d_s, cc, model_coords);
-    msh_time = timeInMilliseconds() - c_time;
 
     //UNCOMMENT FOR OBJ OUTPUT
-    for(int i = 0; i < model->n_layers; i++){
+    /*for(int i = 0; i < model->n_layers; i++){
        char path[256];
        sprintf(path, "obj_converted/%d.obj", i);
        obj_convert(&roots[i], path, d_s);
-    }
-
+    }*/
+    
+    printf("\nCleaning up the mess...\n\n");
     for(int i = 0; i < model->n_layers; i++)
        demalloc_tree(&roots[i]);
     free(roots);
-    
-
-    printf("\nWALL-Time: %llu ms\n\n", timeInMilliseconds() - start_time);
-    printf("int/p = %llu ms\t ne/p = %llu ms\t fl = %llu ms\n fi = %llu ms\t int_trees/p = %llu ms\t msh = %llu ms\n\n", int_time, n_time, fl_time, fi_time, int_t_time, msh_time);
-
 }
 
 
