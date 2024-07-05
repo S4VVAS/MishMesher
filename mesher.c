@@ -487,7 +487,9 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
             fill_voids(&roots[i]);
     }
     printf("\n\nIntersecting material layers...\n\n");
-    parallel_intersect(roots, model->n_layers, model->groups);
+    //No point intersecting if we only have 1 layer
+    if(model->n_layers > 1)
+        parallel_intersect(roots, model->n_layers, model->groups);
     printf("Creating .MSH..\n");
     mish_convert(roots, model->n_layers, out_path, d_s, cc, model_coords);
 
@@ -498,20 +500,8 @@ void mesh(double cell_size, struct model* model, int core_count, char* out_path)
        obj_convert(&roots[i], path, d_s);
     }*/
     
-    printf("\nCleaning up the mess...\n\n");
+    printf("\nCleaning up the mess...\n");
     for(int i = 0; i < model->n_layers; i++)
        demalloc_tree(&roots[i]);
     free(roots);
 }
-
-
-
-
-///____________________________________________________///
-/*
-
-IF TIME PERMITS!!!
-
-*   Write a .geo converter from .msh
-
-*///____________________________________________________///
