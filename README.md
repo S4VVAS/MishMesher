@@ -1,5 +1,4 @@
 ![mishmesher logo](md-imgs/MishMesher-Logo.jpg)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/S4VVAS/MishMesher/total)
 
 > MishMesher is the result of my Master's Thesis project in collaboration with SAAB AB.
 
@@ -65,6 +64,8 @@ Here is an example of how to run MishMesher:
 ```
 
 ## License
-OSL-3.0
+OSL 3.0
+
 **Free/Open Source Software! Hell Yeah!**
+
 If you have made any changes or improvements that you would like to share with others, message me!
