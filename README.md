@@ -2,7 +2,7 @@
 
 > MishMesher is the result of my Master's Thesis project in collaboration with SAAB AB.
 
--- Thesis Identifiers
+## Thesis Identifiers
 - URN: urn:nbn:se:uu:diva-542556
 - OAI: oai:DiVA.org:uu-542556
 - DiVA, id: diva2:1912711
