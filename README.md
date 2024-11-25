@@ -71,6 +71,6 @@ Here is an example of how to run MishMesher:
 ## License
 OSL 3.0
 
-**Free/Open Source Software! Hell Yeah!**
+**Free/Open Source Software!**
 
 If you have made any changes or improvements that you would like to share with others, message me!
